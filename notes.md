@@ -105,7 +105,18 @@
 1. Create a new folder called components and inside it create a new file called Header.tsx 
 2. Add the React Functional Component with RFC.
 3. Go to `layout.tsx` and import the Header component.
-4. Between the <body> and <children> add the <Header />
+4. Between the <body> and <children> add the <Header /> if not auto import: `import Header from './components/Header';`
+5. Install [Flowbite-react](https://flowbite-react.com//) site, then hit Get Started.
+   5.1 Install the package via npm `npm install flowbite-react`.
+   5.2 Now go to the `tailwind.config.ts` file and add the following code:
+       Go to the top of the file and import `import flowbite from "flowbite/plugin";`
+   5.3 In the content part add: `"./node_modules/flowbite-react/**/*.{js,jsx,ts,tsx}",`
+   5.4 And in plugins add the pluglin:
+   `
+    plugins: [
+        flowbite,
+    ],
+   `
 
 
 

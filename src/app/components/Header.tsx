@@ -1,7 +1,11 @@
-import React from 'react'
+import React from 'react';
+import { Button } from 'flowbite-react';
 
-export default function header() {
+export default function Header(): JSX.Element {
   return (
-    <div>FHDP</div>
-  )
+    <>
+      <div>FHDP</div>
+      <Button>Click me please</Button>
+    </>
+  );
 }
