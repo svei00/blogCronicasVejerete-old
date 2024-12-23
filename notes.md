@@ -102,6 +102,7 @@
    `
 
 ## Create the Header Section.
+1. Create a new folder called components and inside it create a new file called Header.tsx 
 
 
 
