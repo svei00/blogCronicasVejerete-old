@@ -103,6 +103,9 @@
 
 ## Create the Header Section.
 1. Create a new folder called components and inside it create a new file called Header.tsx 
+2. Add the React Functional Component with RFC.
+3. Go to `layout.tsx` and import the Header component.
+4. Between the <body> and <children> add the <Header />
 
 
 
