@@ -1,11 +1,11 @@
 import React from 'react';
 import { Button } from 'flowbite-react';
 
-export default function Header(): JSX.Element {
+export default function Header() {
   return (
     <>
       <div>FHDP</div>
-      <Button>Click me please</Button>
+      <Button gradientDuoTone='purpleToOrange' outline>Click me please</Button>
     </>
   );
 }

@@ -1,12 +1,11 @@
 import type { Config } from "tailwindcss";
-import flowbite from "flowbite/plugin"; // Correct import for Flowbite plugin
 
 const config: Config = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./node_modules/flowbite-react/**/*.{js,jsx,ts,tsx}", // Include Flowbite React files
+    "./node_modules/flowbite-react/**/*.js",
   ],
   theme: {
     extend: {
@@ -59,19 +58,16 @@ const config: Config = {
         },
       },
       gradientColorStops: (theme) => ({
-        // Brand gradient colors
         "brand-start": theme("colors.brand.500"),
         "brand-mid": theme("colors.brand.700"),
         "brand-end": theme("colors.brand.900"),
-        // Accent gradient colors
         "accent-start": theme("colors.accent.400"),
         "accent-mid": theme("colors.accent.600"),
         "accent-end": theme("colors.accent.800"),
       }),
     },
   },
-  
-  plugins: [flowbite], // Correct plugin usage
+  plugins: [require('flowbite/plugin')],
 };
 
 export default config;
