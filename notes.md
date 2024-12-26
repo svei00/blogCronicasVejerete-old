@@ -109,14 +109,15 @@
 5. Install [Flowbite-react](https://flowbite-react.com//) site, then hit Get Started.
    5.1 Install the package via npm `npm install flowbite-react`.
    5.2 Now go to the `tailwind.config.ts` file and add the following code:
-       Go to the top of the file and import `import flowbite from "flowbite/plugin";`
-   5.3 In the content part add: `"./node_modules/flowbite-react/**/*.{js,jsx,ts,tsx}",`
+       Go to the top of the file and import `import flowbite from 'flowbite-react/tailwind';";`
+   5.3 In the content part add: `flowbite.content(),`
    5.4 And in plugins add the pluglin:
    `
     plugins: [
-        flowbite,
+        flowbite.plugin()
     ],
    `
+6. Install React Icons via npm `npm install react-icons`
 
 
 
