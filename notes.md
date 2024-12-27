@@ -206,9 +206,14 @@
    export default Header;
    `
 
+## Add Next-Themes to apply Dark Mode.
+1. Install the package Next Themes `npm i next-themes`
+2. Add the <ThemeProvider> tag after and before the <body> tag on the /src/app `layout.txs` file
+3. Create a <ThemeComp> component inside the /src/app/components folder.
+4. In the file `ThemeCopm.tsx` add the following code:
 
 
 
 ## Bibliography
 1. Main Tutorial [Code With Sahand](https://www.youtube.com/watch?v=Zw8Wl1W0LW0&t=9s) 
-2. [NextJS](https://nextjs.org/docs/getting-started/installation)
+2. [NextJS](https://nextjs.org/docs/getting-started/installation) 
