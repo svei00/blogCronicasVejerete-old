@@ -3,13 +3,15 @@ import React, { FC } from 'react'; // Importing React and FunctionComponent typi
 import { Button, Navbar, TextInput } from 'flowbite-react'; // Importing components from Flowbite-React
 import Link from 'next/link'; // Link component for navigation
 import { AiOutlineSearch } from 'react-icons/ai'; // Search icon from React Icons
-import { FaMoon } from 'react-icons/fa'; // Moon icon from React Icons for dark mode toggle
+import { FaMoon, FaSun } from 'react-icons/fa'; // Moon icon from React Icons for dark mode toggle
 import { usePathname } from 'next/navigation'; // Hook to retrieve the current pathname
+import { useTheme } from 'next-themes'; // Hook to access theme and setTheme from next-themes
 
 // Header Component
 const Header: FC = () => {
   // Get the current pathname of the website to determine active links
   const path: string = usePathname();
+  const { theme, setTheme } = useTheme(); // Access theme and setTheme from next-themes
 
   return (
     <>
@@ -36,9 +38,14 @@ const Header: FC = () => {
         </form>
 
         {/* Dark Mode Toggle Button */}
-        <Button className="w-12 h-10 hidden sm:inline" color="gray" pill>
-          <FaMoon />
-        </Button>
+        <Button
+  className="w-12 h-10 hidden sm:inline"
+  color="gray"
+  pill
+  onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+>
+  {theme === 'light' ? <FaSun /> : <FaMoon />}
+</Button>
 
         {/* Sign-in Button and Navbar Toggle */}
         <div className="flex gap-2 md:order-2">

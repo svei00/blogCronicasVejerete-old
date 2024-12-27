@@ -213,6 +213,9 @@
 4. In the file `ThemeCopm.tsx` add the following code:
 
 
+## Adding Authentication Using Clerk.
+
+
 
 ## Bibliography
 1. Main Tutorial [Code With Sahand](https://www.youtube.com/watch?v=Zw8Wl1W0LW0&t=9s) 
