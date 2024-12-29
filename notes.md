@@ -389,7 +389,9 @@
 
 
 ## Adding Authentication Using Clerk.
-
+1. Go to [Clerk](https://clerk.com/) and create a new project. If you don't have an account, create one.
+2. Select *Application name* to create the login. Then hit **Create Applicaiton**
+3. Install Clerk app `npm install @clerk/nextjs`
 
 
 ## Bibliography
