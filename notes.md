@@ -392,11 +392,14 @@
 1. Go to [Clerk](https://clerk.com/) and create a new project. If you don't have an account, create one.
 2. Select *Application name* to create the login. Then hit **Create Applicaiton**
 3. Install Clerk app `npm install @clerk/nextjs`
-4. Add the Enviromental Variable by going to `src` folder and create the `env.local` file. Then paste the clerk code:
+4. Add the Enviromental Variable by going to `/` folder and create the `env.local` file. Then paste the clerk code:
    `
    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_aWRlYWwtYW50ZWxvcGUtMzkuY2xlcmsuYWNjb3VudHMuZGV2JA
    CLERK_SECRET_KEY=sk_test_51NJrH9ZRXWiMJQxeo2sxnowyHaxuHrUnfeF2L2kNk
    `
+5. Add middleware file `middleware.ts` inside the `/src` folder.
+6. Go back to `layout.tsx` file on `/src/app` folder and cover all the code with the tag <ClerkProvider>
+   6.1 If not auto import: `import { ClerkProvider } from "@clerk/nextjs";` on the top of the code.
    47:45
 
 
