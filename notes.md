@@ -392,6 +392,12 @@
 1. Go to [Clerk](https://clerk.com/) and create a new project. If you don't have an account, create one.
 2. Select *Application name* to create the login. Then hit **Create Applicaiton**
 3. Install Clerk app `npm install @clerk/nextjs`
+4. Add the Enviromental Variable by going to `src` folder and create the `env.local` file. Then paste the clerk code:
+   `
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_aWRlYWwtYW50ZWxvcGUtMzkuY2xlcmsuYWNjb3VudHMuZGV2JA
+   CLERK_SECRET_KEY=sk_test_51NJrH9ZRXWiMJQxeo2sxnowyHaxuHrUnfeF2L2kNk
+   `
+   47:45
 
 
 ## Bibliography
