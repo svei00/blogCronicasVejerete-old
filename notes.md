@@ -400,7 +400,30 @@
 5. Add middleware file `middleware.ts` inside the `/src` folder.
 6. Go back to `layout.tsx` file on `/src/app` folder and cover all the code with the tag <ClerkProvider>
    6.1 If not auto import: `import { ClerkProvider } from "@clerk/nextjs";` on the top of the code.
-   47:45
+   It should look like this:
+   `
+   <ClerkProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <ThemeProvider attribute="class" enableSystem>
+          <ThemeComp>
+            <div className="bg-white text-gray-700 dark:text-gray-200 dark:bg-[rgb(16,23,42)] min-h-screen">
+              <Header />
+              {children}
+            </div>
+          </ThemeComp>
+        </ThemeProvider>
+      </body>
+    </html>
+    </ClerkProvider>
+   `
+7. Now go to `/src/app/components/Header.tsx` and add the following code:
+   `import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';`
+
+8. Install [Clerk Themes](https://clerk.com/docs/customization/themes) to manage dark and light theme. `npm install @clerk/themes`
+   52:57
 
 
 ## Bibliography

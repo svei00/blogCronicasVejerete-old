@@ -6,6 +6,7 @@ import { AiOutlineSearch } from 'react-icons/ai';
 import { FaMoon, FaSun } from 'react-icons/fa'; // Icons for themes
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 
 const Header: FC = () => {
   const path: string = usePathname();
