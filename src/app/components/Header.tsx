@@ -7,6 +7,7 @@ import { FaMoon, FaSun } from 'react-icons/fa'; // Icons for themes
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
+import { dark, light } from '@clerk/themes';
 
 const Header: FC = () => {
   const path: string = usePathname();

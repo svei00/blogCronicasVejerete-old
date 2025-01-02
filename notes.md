@@ -423,7 +423,8 @@
    `import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';`
 
 8. Install [Clerk Themes](https://clerk.com/docs/customization/themes) to manage dark and light theme. `npm install @clerk/themes`
-   52:57
+9. In the `Header.tsx` file, add the following code: `import { dark, light } from '@clerk/themes';`
+    
 
 
 ## Bibliography
