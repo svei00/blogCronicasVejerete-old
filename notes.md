@@ -424,7 +424,57 @@
 
 8. Install [Clerk Themes](https://clerk.com/docs/customization/themes) to manage dark and light theme. `npm install @clerk/themes`
 9. In the `Header.tsx` file, add the following code: `import { dark, light } from '@clerk/themes';`
-    
+10. In the Sign In button add the following code:
+    `
+     <SignedIn>
+            <UserButton
+              appearance={{
+                baseTheme: theme === "light" ? light : dark,
+              }}
+            />
+          </SignedIn>
+          <SignedOut>
+            <Button gradientDuoTone="purpleToBlue" outline>
+              <SignInButton />
+            </Button>
+          </SignedOut>
+    `  
+11. On [Clerk](https://clerk.com/docs/references/nextjs/custom-signup-signin-pages) you can se how to create `src/app/sign-up/[[...sign-up]]/page.tsx` file and add the following code:
+    `
+      import { SignUp } from "@clerk/nextjs";
+
+      const Page: React.FC = () => {
+      return (
+         <div className="flex items-center justify-center p-3">
+            <SignUp />
+         </div>
+      );
+      };
+
+      export default Page;
+    `
+12. Do the same with the SignIn page by creating `src/app/sign-in/[[...sign-in]]/page.tsx` file and add the following code:
+    `
+    import { SignIn } from "@clerk/nextjs";
+
+      const Page: React.FC = () => {
+      return (
+         <div className="flex items-center justify-center p-3">
+            <SignIn />
+         </div>
+      );
+      };
+
+      export default Page;
+    `
+13. On the `.env.local` file add:
+    `
+    NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+    NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+    `
+
+## Sync Clerk Data to Your Application with Webhooks.
+ 
 
 
 ## Bibliography

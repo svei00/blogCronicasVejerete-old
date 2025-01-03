@@ -1,13 +1,13 @@
-'use client';
-import React, { FC, useEffect, useState } from 'react';
-import { Button, Navbar, TextInput } from 'flowbite-react';
-import Link from 'next/link';
-import { AiOutlineSearch } from 'react-icons/ai';
-import { FaMoon, FaSun } from 'react-icons/fa'; // Icons for themes
-import { usePathname } from 'next/navigation';
-import { useTheme } from 'next-themes';
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
-import { dark, light } from '@clerk/themes';
+"use client";
+import React, { FC, useEffect, useState } from "react";
+import { Button, Navbar, TextInput } from "flowbite-react";
+import Link from "next/link";
+import { AiOutlineSearch } from "react-icons/ai";
+import { FaMoon, FaSun } from "react-icons/fa"; // Icons for themes
+import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { dark, light } from "@clerk/themes";
 
 const Header: FC = () => {
   const path: string = usePathname();
@@ -22,8 +22,7 @@ const Header: FC = () => {
   if (!mounted) return null; // Prevent rendering on the server
 
   // Determine the icon based on theme and system settings
-  const currentTheme =
-    theme === 'system' ? systemTheme : theme;
+  const currentTheme = theme === "system" ? systemTheme : theme;
 
   return (
     <>
@@ -47,42 +46,46 @@ const Header: FC = () => {
           />
         </form>
 
-        {/* Dark Mode Toggle Button */}
-        <Button
-          className="w-10 h-10"
-          color="gray"
-          pill
-          onClick={() =>
-            setTheme(
-              currentTheme === 'light' ? 'dark' : 'light'
-            )
-          }
-        >
-          {currentTheme === 'light' ? <FaSun /> : <FaMoon />}
-        </Button>
+        <div className="flex gap-2 md:order-2 items-center">
+          {/* Dark Mode Toggle Button */}
+          <Button
+            className="w-10 h-10"
+            color="gray"
+            pill
+            onClick={() =>
+              setTheme(currentTheme === "light" ? "dark" : "light")
+            }
+          >
+            {currentTheme === "light" ? <FaSun /> : <FaMoon />}
+          </Button>
 
-        <div className="flex gap-2 md:order-2">
-          <Link href="/signin">
+          <SignedIn>
+            <UserButton
+              appearance={{
+                baseTheme: theme === "light" ? light : dark,
+              }}
+            />
+          </SignedIn>
+          <SignedOut>
             <Button gradientDuoTone="purpleToBlue" outline>
-              Iniciar sesión
+              <SignInButton />
             </Button>
-          </Link>
+          </SignedOut>
           <Navbar.Toggle />
         </div>
-
         <Navbar.Collapse>
           <Link href="/">
-            <Navbar.Link active={path === '/'} as="div">
+            <Navbar.Link active={path === "/"} as="div">
               Home
             </Navbar.Link>
           </Link>
           <Link href="/about">
-            <Navbar.Link active={path === '/about'} as="div">
+            <Navbar.Link active={path === "/about"} as="div">
               Acerca
             </Navbar.Link>
           </Link>
           <Link href="/projects">
-            <Navbar.Link active={path === '/projects'} as="div">
+            <Navbar.Link active={path === "/projects"} as="div">
               Proyectos
             </Navbar.Link>
           </Link>
