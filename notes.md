@@ -474,6 +474,14 @@
     `
 
 ## Sync Clerk Data to Your Application with Webhooks.
+1. For this step if you don't publish your app in a host you can deploy it at [vercel](https://vercel.com/)
+   1.1 Remember that you cannot use special characters so use html maks
+   1.2 Use Github to Sing-in/Sign-up that way will be easier to deploy your site.
+   1.3 Go to the project list and import it.
+   1.4 Go to the settings and add the environment variables copy and paste the `.env.local` varialbes.
+   1.5 Hit Deploy.
+2. Go to your **Clerk** Application then **Configure** > **Webhooks**
+3. 
  
 
 
