@@ -7,7 +7,17 @@ import { FaMoon, FaSun } from "react-icons/fa"; // Icons for themes
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
-import { dark, light } from "@clerk/themes";
+import { dark } from "@clerk/themes";
+
+// Define a custom light theme object in order to deploy in Vercel
+const light = {
+  variables: {
+    colorPrimary: "#ffffff",
+    colorBackground: "#f8f9fa",
+    colorText: "#212529",
+    colorDanger: "#dc3545",
+  },
+};
 
 const Header: FC = () => {
   const path: string = usePathname();
@@ -58,7 +68,6 @@ const Header: FC = () => {
           >
             {currentTheme === "light" ? <FaSun /> : <FaMoon />}
           </Button>
-
           <SignedIn>
             <UserButton
               appearance={{
