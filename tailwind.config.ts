@@ -58,6 +58,7 @@ const config: Config = {
           info: "#3B82F6",
         },
       },
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       gradientColorStops: (theme) => ({
         "brand-start": theme("colors.brand.500"),
         "brand-mid": theme("colors.brand.700"),

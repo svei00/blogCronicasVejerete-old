@@ -7,16 +7,8 @@ import { FaMoon, FaSun } from "react-icons/fa"; // Icons for themes
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
-
-// Define a custom light theme object in order to deploy in Vercel
-const light = {
-  ...dark, // Extend the dark theme
-  colorPrimary: "#ffffff",
-  colorBackground: "#f8f9fa",
-  colorText: "#212529",
-  colorDanger: "#dc3545",
-};
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+import { dark, light } from "@clerk/themes";
 
 const Header: FC = () => {
   const path: string = usePathname();
