@@ -11,12 +11,11 @@ import { dark } from "@clerk/themes";
 
 // Define a custom light theme object in order to deploy in Vercel
 const light = {
-  variables: {
-    colorPrimary: "#ffffff",
-    colorBackground: "#f8f9fa",
-    colorText: "#212529",
-    colorDanger: "#dc3545",
-  },
+  ...dark, // Extend the dark theme
+  colorPrimary: "#ffffff",
+  colorBackground: "#f8f9fa",
+  colorText: "#212529",
+  colorDanger: "#dc3545",
 };
 
 const Header: FC = () => {
