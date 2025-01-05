@@ -7,8 +7,16 @@ import { FaMoon, FaSun } from "react-icons/fa"; // Icons for themes
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-import { dark, light } from "@clerk/themes";
+import { dark } from "@clerk/themes";
+
+const light = {
+  variables: {
+    colorPrimary: "#fff", // Define custom light theme properties
+    colorBackground: "#f0f0f0",
+    colorText: "#000",
+    colorDanger: "#ff4d4d",
+  },
+};
 
 const Header: FC = () => {
   const path: string = usePathname();

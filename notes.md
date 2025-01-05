@@ -483,7 +483,8 @@
 2. Go to your **Clerk** Application then **Configure** > **Webhooks**
 3. 
  
-
+## Notes
+* Whith this line // eslint-disable-next-line @typescript-eslint/ban-ts-comment you can ommit Eslint validations.
 
 ## Bibliography
 1. Main Tutorial [Code With Sahand](https://www.youtube.com/watch?v=Zw8Wl1W0LW0&t=9s) 
