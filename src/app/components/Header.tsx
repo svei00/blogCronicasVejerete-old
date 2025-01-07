@@ -7,16 +7,7 @@ import { FaMoon, FaSun } from "react-icons/fa"; // Icons for themes
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
-
-const light = {
-  variables: {
-    colorPrimary: "#fff", // Define custom light theme properties
-    colorBackground: "#f0f0f0",
-    colorText: "#000",
-    colorDanger: "#ff4d4d",
-  },
-};
+import { dark, neobrutalism } from "@clerk/themes";
 
 const Header: FC = () => {
   const path: string = usePathname();
@@ -70,7 +61,7 @@ const Header: FC = () => {
           <SignedIn>
             <UserButton
               appearance={{
-                baseTheme: theme === "light" ? light : dark,
+                baseTheme: theme === "light" ? neobrutalism : dark,
               }}
             />
           </SignedIn>
