@@ -13,8 +13,8 @@ export const connect = async (): Promise<void> => {
     try {
         await mongoose.connect(process.env.MONGODB_URI || "", {
             dbName: "cronicasdelvejerete",
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
+            // useNewUrlParser: true, // Deprecated in newer versions of mongoose
+            // useUnifiedTopology: true, // Deprecated in newer versions of mongoose
         });
         console.log("Connected to MongoDB");
         initialized = true;
