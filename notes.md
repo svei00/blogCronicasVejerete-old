@@ -481,7 +481,7 @@
    1.4 Go to the settings and add the environment variables copy and paste the `.env.local` varialbes.
    1.5 Hit Deploy.
 2. Go to your **Clerk** Application then **Configure** > **Webhooks** [Webhook Sync](https://clerk.com/docs/webhooks/sync-data)
-3. Hit the button **Add Endpoint** and paste the vercer url `https://your-app-name.vercel.app/` since it doesn't work with `localhost` or `127.0.0.1` then hit:
+3. Hit the button **Add Endpoint** and paste the vercer url `https://your-app-name.vercel.app/api/webhooks` since it doesn't work with `localhost` or `127.0.0.1` then hit:
    3.1 user.created
    3.2 user.updated
    3.3 user.deleted
@@ -552,9 +552,54 @@
    `
 8. Also you can add examples when user is Created, Updated or deleted around the line of code 55 of route.ts:
    `
-   
+   if (evt.type === 'user.created') {
+      console.log(`User ${evt.data.id} was created`)
+   }
+   if (evt.type === 'user.updated') {
+      console.log(`User ${evt.data.id} was updated`)
+   }
+   if (evt.type === 'user.deleted') {
+      console.log(`User ${evt.data.id} was deleted`)
+   }
    `
    
+## Add MongoDb and Save Users from Clerk
+1. Go to [MongoDB](https://www.mongodb.com/) And Sign-in or Sign-up.
+2. Create a Cluster, you can leave the name to **cluster0**
+3. Create the username and password. You can leave the name to **admin**
+4. In choose conections pick **Driver** then:
+   4.1 Node.js 6.7 or later
+   4.2 Install MongoDB on the app `npm install mongodb`
+   4.3 Install Mongoose `npm install mongoose`
+5. Go to the **.env.local** file and add the following code: `MONGODB_URI=mongodb+srv://admin:your_password@cluster0.mongodb.net/test?retryWrites=true&w=majority`
+6. Inside the **src** folder create `/lib/mongodb/mongoose.ts` file:
+   ```
+   import mongoose from "mongoose";
+
+   let initialized: boolean = false; // Explicitly typed as boolean
+
+   export const connect = async (): Promise<void> => {
+      mongoose.set("strictQuery", true);
+
+      if (initialized) {
+         console.log("Already connected to MongoDB");
+         return;
+      }
+
+      try {
+         await mongoose.connect(process.env.MONGODB_URI || "", {
+               dbName: "cronicasdelvejerete",
+               useNewUrlParser: true,
+               useUnifiedTopology: true,
+         });
+         console.log("Connected to MongoDB");
+         initialized = true;
+      } catch (error) {
+         console.error("Error connecting to MongoDB:", error);
+      }
+   };
+   ```
+   1:35:35
 
 
  
