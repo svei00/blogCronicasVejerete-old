@@ -480,8 +480,83 @@
    1.3 Go to the project list and import it.
    1.4 Go to the settings and add the environment variables copy and paste the `.env.local` varialbes.
    1.5 Hit Deploy.
-2. Go to your **Clerk** Application then **Configure** > **Webhooks**
-3. 
+2. Go to your **Clerk** Application then **Configure** > **Webhooks** [Webhook Sync](https://clerk.com/docs/webhooks/sync-data)
+3. Hit the button **Add Endpoint** and paste the vercer url `https://your-app-name.vercel.app/` since it doesn't work with `localhost` or `127.0.0.1` then hit:
+   3.1 user.created
+   3.2 user.updated
+   3.3 user.deleted
+   3.4 Hit **Create** button.
+   3.5 Go to the Signing Secret and copy that key.
+4. Go to the **.env.local** file and add the following code: `SIGNING_SECRET=whswhsec_your_secret_signin_key`
+5. Do the same in the Vercel enviromental variables by adding the same code.
+   5.1 Vercel App -> Settings -> Environment Variables -> Add Variable -> Name: `SIGNING_SECRET` Value: `whswhsec_your_secret_signin_key`
+6. Install Svix by: `npm install svix` to deliver webhooks to your application.
+7. Create a route.tsx file on `/src/app/api/webhooks/route.ts` and add the following code:
+   `
+   import { Webhook } from 'svix'
+   import { headers } from 'next/headers'
+   import { WebhookEvent } from '@clerk/nextjs/server'
+
+   export async function POST(req: Request) {
+   const SIGNING_SECRET = process.env.SIGNING_SECRET
+
+   if (!SIGNING_SECRET) {
+      throw new Error('Error: Please add SIGNING_SECRET from Clerk Dashboard to .env or .env.local')
+   }
+
+   // Create new Svix instance with secret
+   const wh = new Webhook(SIGNING_SECRET)
+
+   // Get headers
+   const headerPayload = await headers()
+   const svix_id = headerPayload.get('svix-id')
+   const svix_timestamp = headerPayload.get('svix-timestamp')
+   const svix_signature = headerPayload.get('svix-signature')
+
+   // If there are no headers, error out
+   if (!svix_id || !svix_timestamp || !svix_signature) {
+      return new Response('Error: Missing Svix headers', {
+         status: 400,
+      })
+   }
+
+   // Get body
+   const payload = await req.json()
+   const body = JSON.stringify(payload)
+
+   let evt: WebhookEvent
+
+   // Verify payload with headers
+   try {
+      evt = wh.verify(body, {
+         'svix-id': svix_id,
+         'svix-timestamp': svix_timestamp,
+         'svix-signature': svix_signature,
+      }) as WebhookEvent
+   } catch (err) {
+      console.error('Error: Could not verify webhook:', err)
+      return new Response('Error: Verification error', {
+         status: 400,
+      })
+   }
+
+   // Do something with payload
+   // For this guide, log payload to console
+   const { id } = evt.data
+   const eventType = evt.type
+   console.log(`Received webhook with ID ${id} and event type of ${eventType}`)
+   console.log('Webhook payload:', body)
+
+   return new Response('Webhook received', { status: 200 })
+   }
+   `
+8. Also you can add examples when user is Created, Updated or deleted around the line of code 55 of route.ts:
+   `
+   
+   `
+   
+
+
  
 ## Notes
 * Whith this line // eslint-disable-next-line @typescript-eslint/ban-ts-comment you can ommit Eslint validations.
