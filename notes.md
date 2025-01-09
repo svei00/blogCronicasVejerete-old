@@ -660,9 +660,9 @@
    export default User;
 
    ```
-8. Now create the folder actios and its file: `src/lib/actions/user.actions.ts` with the following code:
+8. Now create the folder actios and its file: `src/lib/actions/user.ts` with the following code:
    
-   1:35:35
+   1:45:35
 
 
  
