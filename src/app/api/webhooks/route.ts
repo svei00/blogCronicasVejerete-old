@@ -1,25 +1,19 @@
 import { Webhook } from 'svix';
 import { headers } from 'next/headers';
-import { clerkClient, WebhookEvent } from '@clerk/nextjs/server';
+import { clerkClient } from '@clerk/nextjs/server';
+import { WebhookEvent } from '@clerk/nextjs/server';
 import { createOrUpdateUser, deleteUser } from '@/lib/actions/user';
 
 export async function POST(req: Request): Promise<Response> {
-  // Increase the response timeout
-  req.signal.addEventListener('abort', () => {
-    console.log('Request was aborted');
-  });
+  // Use WEBHOOK_SECRET instead of SIGNING_SECRET to match Clerk's documentation
+  const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 
-  const SIGNING_SECRET = process.env.SIGNING_SECRET;
-
-  if (!SIGNING_SECRET) {
-    throw new Error('Error: Please add SIGNING_SECRET from Clerk Dashboard to .env or .env.local');
+  if (!WEBHOOK_SECRET) {
+    throw new Error('Error: Please add WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local');
   }
 
-  // Create new Svix instance with secret
-  const wh = new Webhook(SIGNING_SECRET);
-
   // Get headers
-  const headerPayload = await headers();
+  const headerPayload = headers();
   const svix_id = headerPayload.get('svix-id');
   const svix_timestamp = headerPayload.get('svix-timestamp');
   const svix_signature = headerPayload.get('svix-signature');
@@ -31,15 +25,13 @@ export async function POST(req: Request): Promise<Response> {
     });
   }
 
-  let payload;
-  try {
-    payload = await req.json();
-  } catch (error) {
-    console.error('Error parsing request body:', error);
-    return new Response('Error parsing request body', { status: 400 });
-  }
-
+  // Get body
+  const payload = await req.json();
   const body = JSON.stringify(payload);
+
+  // Create new Svix instance with secret
+  const wh = new Webhook(WEBHOOK_SECRET);
+
   let evt: WebhookEvent;
 
   // Verify payload with headers
@@ -56,12 +48,12 @@ export async function POST(req: Request): Promise<Response> {
     });
   }
 
-  // Log payload for debugging
   const { id } = evt?.data ?? {};
   const eventType = evt?.type;
-  console.log(`Processing webhook: ID ${id}, Type ${eventType}, Timestamp: ${new Date().toISOString()}`);
+  
+  console.log(`Received webhook with ID ${id} and event type of ${eventType}`);
+  console.log('Webhook payload:', body);
 
-  // Handle user events
   if (eventType === 'user.created' || eventType === 'user.updated') {
     const {
       id,
@@ -73,58 +65,47 @@ export async function POST(req: Request): Promise<Response> {
     } = evt?.data ?? {};
 
     if (!id) {
-      console.error('Error: User ID is undefined in webhook payload');
       return new Response('Error: User ID is undefined', {
         status: 400,
       });
     }
 
     try {
-      // Set a timeout for the database operation
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Database operation timed out')), 8000)
-      );
-
-      const userPromise = createOrUpdateUser(
+      const user = await createOrUpdateUser(
         id,
         first_name ?? '',
         last_name ?? '',
         image_url ?? '',
-        email_addresses,
+        email_addresses ?? [],
         username ?? ''
       );
 
-      // Race between the database operation and the timeout
-      const user = await Promise.race([userPromise, timeoutPromise]);
-
       if (user && eventType === 'user.created') {
         try {
-          const clerk = await clerkClient();
-          await clerk.users.updateUserMetadata(id, {
+          // Use clerkClient directly without initialization
+          await clerkClient.users.updateUserMetadata(id, {
             publicMetadata: {
               userMongoId: user._id,
               isAdmin: user.isAdmin,
             },
           });
-          console.log(`Successfully updated Clerk metadata for user ${id}`);
         } catch (error) {
-          console.error('Error updating Clerk metadata:', error);
+          console.error('Error Updating User Metadata:', error);
         }
       }
 
-      console.log(`Successfully processed user ${id} for event ${eventType}`);
-      return new Response('User processed successfully', { status: 200 });
+      return new Response('', { status: 200 });
     } catch (error) {
-      console.error(`Error processing user ${id}:`, error);
-      // Send a 202 instead of 400 to acknowledge receipt of the webhook
-      return new Response('User processing queued', { status: 202 });
+      console.error('Error Creating or Updating User:', error);
+      return new Response('Error: Could not create or update user', {
+        status: 400,
+      });
     }
   }
 
   if (eventType === 'user.deleted') {
     const { id } = evt?.data ?? {};
     if (!id) {
-      console.error('Error: User ID is undefined in delete webhook');
       return new Response('Error: User ID is undefined', {
         status: 400,
       });
@@ -132,13 +113,14 @@ export async function POST(req: Request): Promise<Response> {
 
     try {
       await deleteUser(id);
-      console.log(`Successfully deleted user ${id}`);
-      return new Response('User deleted successfully', { status: 200 });
+      return new Response('', { status: 200 });
     } catch (error) {
-      console.error(`Error deleting user ${id}:`, error);
-      return new Response('User deletion queued', { status: 202 });
+      console.error('Error Deleting User:', error);
+      return new Response('Error: Could not delete user', {
+        status: 400,
+      });
     }
   }
 
-  return new Response('Webhook received', { status: 200 });
+  return new Response('', { status: 200 });
 }
