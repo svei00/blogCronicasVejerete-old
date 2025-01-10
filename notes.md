@@ -866,7 +866,10 @@
       }
     ```
 10. Go to Verce. and add the MongoDB environment variables **MONGODB_UR** from `.env.local` file
+11. On MongoDB go to Network Access and for testing purposes add **Allow Access from Anywhere**
 
+
+## Add the Create Post Page UI and Protect it as an admin
    1:45:35
 
 
