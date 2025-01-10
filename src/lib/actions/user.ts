@@ -37,3 +37,32 @@ export const createOrUpdateUser = async (
     return null; // Return null if an error occurs
   }
 };
+
+/**
+ * Deletes a user from the database by their Clerk ID.
+ * 
+ * @param id - The Clerk ID of the user to delete.
+ * @returns A promise that resolves to `true` if the user was deleted successfully, or `false` if an error occurred.
+ */
+export const deleteUser = async (id: string): Promise<boolean> => {
+  try {
+    // Connect to the database
+    await connect();
+
+    // Find and delete the user by their Clerk ID
+    const result = await User.findOneAndDelete({ clerkId: id });
+
+    // Check if a user was deleted
+    if (result) {
+      console.log(`User with Clerk ID ${id} deleted successfully.`);
+      return true; // Return true if the user was found and deleted
+    } else {
+      console.log(`User with Clerk ID ${id} not found.`);
+      return false; // Return false if no user was found
+    }
+  } catch (error: unknown) {
+    // Log the error for debugging
+    console.error("Error Deleting User:", error);
+    return false; // Return false if an error occurred
+  }
+};
