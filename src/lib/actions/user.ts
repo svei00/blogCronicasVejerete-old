@@ -11,58 +11,59 @@ export const createOrUpdateUser = async (
   username: string
 ): Promise<IUser | null> => {
   try {
-    // Connect to the database
+    // Ensure a database connection
     await connect();
+
+    // Safely extract the first email address or provide a fallback
+    const email = email_addresses[0]?.email_address || "";
+
+    if (!email) {
+      throw new Error("No valid email address provided.");
+    }
 
     // Find and update or create the user
     const user = await User.findOneAndUpdate(
       { clerkId: id }, // Search by Clerk ID
       {
         $set: {
-          name: first_name, // Update the first name
-          lastName: last_name, // Use `lastName` to match the schema
-          profilePicture: image_url, // Update the profile picture
-          email: email_addresses[0]?.email_address, // Extract the first email address
-          username: username, // Update the username
+          name: first_name, // Match schema field `name`
+          lastName: last_name, // Match schema field `lastName`
+          profilePicture: image_url,
+          email: email,
+          username: username,
         },
       },
-      { new: true, upsert: true } // Return the updated document and create it if not found
+      { new: true, upsert: true } // Return the updated document or create if not found
     );
 
-    // Return the user
-    return user;
-  } catch (error: unknown) {
-    // Type the error as `unknown` and log it safely
-    console.error("Error Creating or Updating User:", error);
-    return null; // Return null if an error occurs
+    return user; // Return the updated or created user
+  } catch (error) {
+    console.error("Error Creating or Updating User:", (error as Error).message);
+    return null;
   }
 };
 
 /**
  * Deletes a user from the database by their Clerk ID.
- * 
  * @param id - The Clerk ID of the user to delete.
  * @returns A promise that resolves to `true` if the user was deleted successfully, or `false` if an error occurred.
  */
-export const deleteUser = async (id: string): Promise<boolean> => {
+export const deleteUser = async (id: string): Promise<IUser | null> => {
   try {
-    // Connect to the database
     await connect();
 
     // Find and delete the user by their Clerk ID
-    const result = await User.findOneAndDelete({ clerkId: id });
+    const user = await User.findOneAndDelete({ clerkId: id });
 
-    // Check if a user was deleted
-    if (result) {
+    if (user) {
       console.log(`User with Clerk ID ${id} deleted successfully.`);
-      return true; // Return true if the user was found and deleted
+      return user;
     } else {
       console.log(`User with Clerk ID ${id} not found.`);
-      return false; // Return false if no user was found
+      return null;
     }
-  } catch (error: unknown) {
-    // Log the error for debugging
-    console.error("Error Deleting User:", error);
-    return false; // Return false if an error occurred
+  } catch (error) {
+    console.error("Error Deleting User:", (error as Error).message);
+    return null;
   }
 };
