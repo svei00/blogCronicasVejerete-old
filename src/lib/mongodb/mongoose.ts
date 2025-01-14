@@ -13,9 +13,9 @@ export const connect = async (): Promise<void> => {
     try {
         await mongoose.connect(process.env.MONGODB_URI || "", {
             dbName: "cronicasdelvejerete",
-            serverSelectionTimeoutMS: 60000, // like 10 minutes
-            useNewUrlParser: true, // Deprecated in newer versions of mongoose
-            useUnifiedTopology: true, // Deprecated in newer versions of mongoose
+            serverSelectionTimeoutMS: 30000, // 30 Seconds
+            // useNewUrlParser: true, // Deprecated in newer versions of mongoose
+            // useUnifiedTopology: true, // Deprecated in newer versions of mongoose
         });
         console.log("Connected to MongoDB");
         initialized = true;
