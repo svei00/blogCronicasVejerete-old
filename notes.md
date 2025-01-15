@@ -874,14 +874,84 @@
    1.1 Using RFC (React Functional Component) create a new component called `Dashboard` and export it.
 2. Now inside the `dashboard` folder create a new folder called `create-post` and a file called `page.tsx`
 3. Go to `src` folder an open the **middleware.ts** file and modify the code:
+   ```
+   import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
+   const isProtectedRoute = createRouteMatcher(['/dashboard(.*)']); // This ensuees that all the routes inside the dashboard will be protected
 
+   export default clerkMiddleware(async (auth, req) => {
+   const { userId } = await auth(); // Get the user id from the auth object
+   if(!userId && isProtectedRoute(req)) { // If the user is not logged in and the route is protected, redirect to the sign in page
+      return (await auth()).redirectToSignIn();
+   }
+   })
+
+   export const config = {
+   matcher: [
+      // Skip Next.js internals and all static files, unless found in search params
+      '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+      // Always run for API routes
+      '/(api|trpc)(.*)',
+   ],
+   };
+   ```
+4. Go to Clerk Dashboard and change the user that you want as an Admin in the Public Metadata in `isAmind` to true.
+5. Do the same in MongoDB
+6. Install (ReactQuillNew)[https://www.npmjs.com/package/react-quill-new] `npm install react-quill-new --save`
+7. Go back to `src/app/dashboard/create-post/page.tsx` and paste the following code:
+8. For Styling the React-Quill-New app you can copy and paste the following code on `/src/app/globals.css`:
+   ```
+   @tailwind base;
+   @tailwind components;
+   @tailwind utilities;
+
+   body {
+   height: 100vh;
+   }
+
+   .ql-editor {
+   font-size: 1.05rem;
+   }
+
+   .post-content p {
+   margin-bottom: 0.5rem;
+   }
+
+   .post-content h1 {
+   font-size: 1.5rem;
+   font-weight: 600;
+   font-family: sans-serif;
+   margin: 1.5rem 0;
+   }
+
+   .post-content h2 {
+   font-size: 1.4rem;
+   font-family: sans-serif;
+   margin: 1.5rem 0;
+   }
+
+   .post-content a {
+   color: rgb(73, 149, 199);
+   text-decoration: none;
+   }
+
+   .post-content a:hover {
+   text-decoration: underline;
+   }
+
+   .dark .post-content a {
+   color: red;
+   }
+   ```
+
+## Complete upload post image functionality
    1:45:35
 
 
  
 ## Notes
 * Whith this line // eslint-disable-next-line @typescript-eslint/ban-ts-comment you can ommit Eslint validations.
+* Using React Quill New on NextJS app https://dev.to/a7u/react-quill-with-nextjs-478b
 
 ## Bibliography
 1. Main Tutorial [Code With Sahand](https://www.youtube.com/watch?v=Zw8Wl1W0LW0&t=9s) 
