@@ -870,6 +870,11 @@
 
 
 ## Add the Create Post Page UI and Protect it as an admin
+1. Go to `app` folder and create a new folder called `dashboard` and a file calle page.tsx
+   1.1 Using RFC (React Functional Component) create a new component called `Dashboard` and export it.
+2. Now inside the `dashboard` folder create a new folder called `create-post` and a file called `page.tsx`
+
+
    1:45:35
 
 
