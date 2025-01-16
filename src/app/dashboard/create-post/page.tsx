@@ -1,22 +1,85 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { TextInput, Select, FileInput, Button } from "flowbite-react";
+import { TextInput, Select, FileInput, Button, Alert } from "flowbite-react";
 import "react-quill-new/dist/quill.snow.css";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
+import { CircularProgressbar } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
 
 import dynamic from "next/dynamic";
+import { useState, ChangeEvent } from "react";
+import { app } from "@/firebase";
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+
+interface FormData {
+  title?: string;
+  category?: string;
+  image?: string;
+  content?: string;
+}
 
 export default function CreatePostPage() {
   const { isSignedIn, user, isLoaded } = useUser();
+
+  const [file, setFile] = useState<File | null>(null);
+  const [imageUploadProgress, setImageUploadProgress] = useState<number | null>(
+    null
+  );
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<FormData>({});
+
+  const handleUploadImage = async () => {
+    try {
+      if (!file) {
+        setImageUploadError("Please select an image to upload");
+        return;
+      }
+      setImageUploadError(null);
+      const storage = getStorage(app);
+      const fileName = `${new Date().getTime()}-${file.name}`;
+      const storageRef = ref(storage, fileName);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setImageUploadProgress(Math.round(progress));
+        },
+        (error) => {
+          setImageUploadError("Image Upload Failed");
+          console.error(error);
+        },
+        async () => {
+          try {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            setImageUploadProgress(null);
+            setImageUploadError(null);
+            setFormData((prev) => ({ ...prev, image: downloadURL }));
+          } catch (error) {
+            console.error("Failed to retrieve image URL", error);
+          }
+        }
+      );
+    } catch (error) {
+      setImageUploadError("Image Upload Failed");
+      setImageUploadProgress(null);
+      console.error(error);
+    }
+  };
 
   if (!isLoaded) {
     return null; // Return nothing while loading
   }
 
-  // Check if the user is signed in and is an admin
   if (isSignedIn && user?.publicMetadata?.isAdmin) {
-    // Added the ? in order to avoid runtime errors in case user does not exist.
     return (
       <div className="p-3 max-w-3xl mx-auto min-h-screen">
         <h1 className="text-center text-3xl my-7 font-semibold">
@@ -30,8 +93,15 @@ export default function CreatePostPage() {
               required
               id="title"
               className="flex-1"
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setFormData((prev) => ({ ...prev, title: e.target.value }))
+              }
             />
-            <Select>
+            <Select
+              onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                setFormData((prev) => ({ ...prev, category: e.target.value }))
+              }
+            >
               <option value="uncategorized">Select a Category</option>
               <option value="alucines">Alucines</option>
               <option value="pensamientos">Pensamientos</option>
@@ -40,20 +110,52 @@ export default function CreatePostPage() {
             </Select>
           </div>
           <div className="flex gap-4 items-center justify-between border-4 border-orange-500 border-dotted p-3">
-            <FileInput type="file" accept="image/*" />
+            <FileInput
+              type="file"
+              accept="image/*"
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setFile(e.target.files?.[0] || null)
+              }
+            />
             <Button
               type="button"
               gradientDuoTone="purpleToPink"
               size="sm"
               outline
+              onClick={handleUploadImage}
+              disabled={!!imageUploadProgress}
             >
-              Upload Image
+              {imageUploadProgress ? (
+                <div className="w-16 h-16">
+                  <CircularProgressbar
+                    value={imageUploadProgress}
+                    text={`${imageUploadProgress || 0}%`}
+                  />
+                </div>
+              ) : (
+                "Upload Image"
+              )}
             </Button>
           </div>
+
+          {imageUploadError && (
+            <Alert color="failure">{imageUploadError}</Alert>
+          )}
+          {formData.image && (
+            <img
+              src={formData.image}
+              alt="Uploaded"
+              className="w-full h-72 object-cover"
+            />
+          )}
+
           <ReactQuill
             theme="snow"
             placeholder="¿Qué quieres crear hoy?"
             className="h-72 mb-12"
+            onChange={(content) =>
+              setFormData((prev) => ({ ...prev, content }))
+            }
             required
           />
           <Button type="submit" gradientDuoTone="purpleToPink">
@@ -64,6 +166,5 @@ export default function CreatePostPage() {
     );
   }
 
-  // If not authorized
   return <h1>You are not authorized to view this page</h1>;
 }

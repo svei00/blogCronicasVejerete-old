@@ -899,6 +899,78 @@
 5. Do the same in MongoDB
 6. Install (ReactQuillNew)[https://www.npmjs.com/package/react-quill-new] `npm install react-quill-new --save`
 7. Go back to `src/app/dashboard/create-post/page.tsx` and paste the following code:
+   ```
+     "use client";
+
+   import { useUser } from "@clerk/nextjs";
+   import { TextInput, Select, FileInput, Button } from "flowbite-react";
+   import "react-quill-new/dist/quill.snow.css";
+
+   import dynamic from "next/dynamic";
+   const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+
+   export default function CreatePostPage() {
+      const { isSignedIn, user, isLoaded } = useUser();
+
+      if (!isLoaded) {
+         return null; // Return nothing while loading
+      }
+
+      // Check if the user is signed in and is an admin
+      if (isSignedIn && user?.publicMetadata?.isAdmin) {
+         // Added the ? in order to avoid runtime errors in case user does not exist.
+         return (
+         <div className="p-3 max-w-3xl mx-auto min-h-screen">
+            <h1 className="text-center text-3xl my-7 font-semibold">
+               Create a Post
+            </h1>
+            <form className="flex flex-col gap-4">
+               <div className="flex flex-col gap-4 sm:flex-row justify-between">
+               <TextInput
+                  type="text"
+                  placeholder="Title"
+                  required
+                  id="title"
+                  className="flex-1"
+               />
+               <Select>
+                  <option value="uncategorized">Select a Category</option>
+                  <option value="alucines">Alucines</option>
+                  <option value="pensamientos">Pensamientos</option>
+                  <option value="announcements">Announcements</option>
+                  <option value="draft">Draft</option>
+               </Select>
+               </div>
+               <div className="flex gap-4 items-center justify-between border-4 border-orange-500 border-dotted p-3">
+                  <FileInput type="file" accept="image/*" />
+               <Button
+                  type="button"
+                  gradientDuoTone="purpleToPink"
+                  size="sm"
+                  outline
+               >
+                  Upload Image
+               </Button>
+               </div>
+               <ReactQuill
+               theme="snow"
+               placeholder="¿Qué quieres crear hoy?"
+               className="h-72 mb-12"
+               required
+               />
+               <Button type="submit" gradientDuoTone="purpleToPink">
+               Publish
+               </Button>
+            </form>
+         </div>
+         );
+      }
+
+      // If not authorized
+      return <h1>You are not authorized to view this page</h1>;
+   }
+
+   ```
 8. For Styling the React-Quill-New app you can copy and paste the following code on `/src/app/globals.css`:
    ```
    @tailwind base;
@@ -945,6 +1017,77 @@
    ```
 
 ## Complete upload post image functionality
+1. To add this functionality we need to go to (Firebase)[https://firebase.google.com/] site.
+2. Then Go to Console:
+   2.1 If first time click on **Get Started with a Firebase project** otherwise **Create a Project**
+   2.2 Name your project and click on **Continue**
+   2.3 In Google Analytics it is not necesary so you can/can't select it.
+   2.4 Hit the button **Create Project** and wait a few seconds.
+3. In the get started by adding Firebase to your App select the Web option (the one with </> icon).
+   3.1 In Register App you can repeat the same name you already type and hit **Register App** without checking the *Setup Firebase hosting* checkbox.
+   3.2 Instal Firebase to your applicaciont by `npm install firebase`
+   3.3 Copy the privided code and paste it on `/src/firebase.tsx`:
+       ```
+       // Import the functions you need from the SDKs you need
+         import { initializeApp } from "firebase/app";
+         import { getAnalytics } from "firebase/analytics";
+         // TODO: Add SDKs for Firebase products that you want to use
+         // https://firebase.google.com/docs/web/setup#available-libraries
+
+         // Your web app's Firebase configuration
+         // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+         const firebaseConfig = {
+         apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+         authDomain: "cronicas-del-vejerete.firebaseapp.com",
+         projectId: "cronicas-del-vejerete",
+         storageBucket: "cronicas-del-vejerete.firebasestorage.app",
+         messagingSenderId: "479303249151",
+         appId: "1:479303249151:web:ba0ea9b4dbda772f0770ca",
+         measurementId: "G-MV3WBGDKC5"
+         };
+
+         // Initialize Firebase
+         export const app = initializeApp(firebaseConfig);
+         const analytics = getAnalytics(app);
+       ```
+4. Go back to the **Firebase** console.
+   4.1 Hit in **All Products** then navigate through **Storage**
+   4.2 If ask you **Upgrade Project** to use Storage. Then hit in **Get Started**
+   4.3 Check all the dialog box than applies to you and hit **Create**
+   4.4 Then in the menu select **Rules** and paste the following code:
+       ```
+      rules_version = '2';
+
+      // Craft rules based on data in your Firestore database
+      // allow write: if firestore.get(
+      //    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
+      service firebase.storage {
+      match /b/{bucket}/o {
+         match /{allPaths=**} {
+            allow write: if 
+            request.resource.size < 2 * 1024 * 1024 && // Limit size to 2MB
+            request.resource.contentType.matches('image/.*'); // Allow only image types
+         }
+      }
+      }
+       ```
+   4.5 Hit **Publish**
+5. Go back to the file `src/app/dashboard/create-post/page.tsx` file and update the code:
+   ```
+   ```
+6. Install package (React Circular Progresbar)[https://www.npmjs.com/package/react-circular-progressbar]
+   6.1 Install `npm install --save react-circular-progressbar` 
+       6.1.1 If there any issue use: `npm install react-circular-progressbar --legacy-peer-deps`
+   6.2 Import:
+       ```
+       import { CircularProgressbar } from 'react-circular-progressbar';
+       import 'react-circular-progressbar/dist/styles.css';
+       ```
+
+## Complete Upload Post Functionality
+ 
+
+
    1:45:35
 
 
