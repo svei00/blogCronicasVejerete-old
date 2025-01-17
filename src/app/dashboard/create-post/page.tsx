@@ -14,6 +14,7 @@ import "react-circular-progressbar/dist/styles.css";
 
 import dynamic from "next/dynamic";
 import { useState, ChangeEvent } from "react";
+import Image from "next/image";
 import { app } from "@/firebase";
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
@@ -142,11 +143,14 @@ export default function CreatePostPage() {
             <Alert color="failure">{imageUploadError}</Alert>
           )}
           {formData.image && (
-            <img
-              src={formData.image}
-              alt="Uploaded"
-              className="w-full h-72 object-cover"
-            />
+            <div className="relative w-full h-72">
+              <Image
+                src={formData.image}
+                alt="Uploaded"
+                layout="fill"
+                objectFit="cover"
+              />
+            </div>
           )}
 
           <ReactQuill
