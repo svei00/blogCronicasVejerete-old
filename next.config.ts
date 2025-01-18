@@ -1,12 +1,19 @@
+import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   reactStrictMode: true,
   images: {
-    domains: ['firebasestorage.googleapis.com'], // Add this line
+    domains: ["firebasestorage.googleapis.com"],
+  },
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      "@": path.resolve(__dirname, "src"),
+    };
+    return config;
   },
 };
 
-
 export default nextConfig;
+
