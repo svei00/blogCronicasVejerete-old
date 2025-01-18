@@ -112,7 +112,7 @@ export default function CreatePostPage() {
           </div>
           <div className="flex gap-4 items-center justify-between border-4 border-orange-500 border-dotted p-3">
             <FileInput
-              type="file"
+              // type="file"
               accept="image/*"
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setFile(e.target.files?.[0] || null)
@@ -160,7 +160,7 @@ export default function CreatePostPage() {
             onChange={(content) =>
               setFormData((prev) => ({ ...prev, content }))
             }
-            required
+            // required
           />
           <Button type="submit" gradientDuoTone="purpleToPink">
             Publish
