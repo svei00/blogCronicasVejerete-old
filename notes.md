@@ -1237,7 +1237,7 @@
                onChange={(content) =>
                setFormData((prev) => ({ ...prev, content }))
                }
-               required
+               // required
             />
             <Button type="submit" gradientDuoTone="purpleToPink">
                Publish
@@ -1276,10 +1276,72 @@
    ```
 
 ## Complete Upload Post Functionality
+1. Since we already added an ochange event listener on the image now we're going to add to:
+   1.1 Title. Around line of code 100:
+       ```
+       onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
+       ```
+   1.2 Category. Around line of code 100:
+       ```
+       onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
+              }
+       ```
+   1.2 Category. Around line of code 100:
+       ```
+       onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
+              }
+       ```
+
+   1.3 Content (ReactQuill). Around line of code 160:
+       ```
+        onChange={(value) => setFormData({ ...formData, content: value })}
+       ```
+   1.4 On the form around line of code 90 we are going to add and onSubmit event:
+       ```
+       onSubmit={handleSubmit}
+       ```
+2. Add the `handleSubmit` function to the `src/app/dashboard/create-post/page.tsx`
+   ```
+   const [publishError, setPublishError] = useState<string | null>(null); // around line 37
+   import { useRouter } from "next/navigation"; // Around line of code 10
+   const router = useRouter(); // initialite it around line of code 40
+
+   // Around line of code 70:
+      const handleSubmit = async (e) => {
+      e.preventDefault();
+      try {
+         const res = await fetch("/api/post/create", {
+         method: "POST",
+         headers: {
+            "Content-Type": "application/json",
+         },
+         body: JSON.stringify({
+            ...formData,
+            userMongoId: user?.publicMetadata.userMongoId,
+         }),
+         });
+         const data = await res.json();
+         if (!data.ok) {
+         setPublishError(data.message);
+         return;
+         }
+         if (res.ok) {
+         setPublishError(null);
+         router.push(`/post/${data.slug}`);
+         }
+      } catch (error) {
+         setPublishError("Failed to publish post");
+      }
+   };
+   ```
  
 
 
-   1:45:35
+   2:48:35
 
 
  

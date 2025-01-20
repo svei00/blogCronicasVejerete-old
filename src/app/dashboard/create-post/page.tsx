@@ -14,6 +14,7 @@ import "react-circular-progressbar/dist/styles.css";
 
 import dynamic from "next/dynamic";
 import { useState, ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { app } from "@/firebase";
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
@@ -34,6 +35,9 @@ export default function CreatePostPage() {
   );
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({});
+  const [publishError, setPublishError] = useState<string | null>(null);
+  const router = useRouter();
+  console.log(formData);
 
   const handleUploadImage = async () => {
     try {
@@ -76,6 +80,33 @@ export default function CreatePostPage() {
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/post/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          userMongoId: user?.publicMetadata.userMongoId,
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        setPublishError(data.message);
+        return;
+      }
+      if (res.ok) {
+        setPublishError(null);
+        router.push(`/post/${data.slug}`);
+      }
+    } catch (error) {
+      setPublishError("Failed to publish post");
+    }
+  };
+
   if (!isLoaded) {
     return null; // Return nothing while loading
   }
@@ -86,7 +117,7 @@ export default function CreatePostPage() {
         <h1 className="text-center text-3xl my-7 font-semibold">
           Create a Post
         </h1>
-        <form className="flex flex-col gap-4">
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-4 sm:flex-row justify-between">
             <TextInput
               type="text"
@@ -94,13 +125,13 @@ export default function CreatePostPage() {
               required
               id="title"
               className="flex-1"
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setFormData((prev) => ({ ...prev, title: e.target.value }))
+              onChange={(e) =>
+                setFormData({ ...setFormData, title: e.target.value })
               }
             />
             <Select
-              onChange={(e: ChangeEvent<HTMLSelectElement>) =>
-                setFormData((prev) => ({ ...prev, category: e.target.value }))
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
               }
             >
               <option value="uncategorized">Select a Category</option>
@@ -157,9 +188,7 @@ export default function CreatePostPage() {
             theme="snow"
             placeholder="¿Qué quieres crear hoy?"
             className="h-72 mb-12"
-            onChange={(content) =>
-              setFormData((prev) => ({ ...prev, content }))
-            }
+            onChange={(value) => setFormData({ ...formData, content: value })}
             // required
           />
           <Button type="submit" gradientDuoTone="purpleToPink">
