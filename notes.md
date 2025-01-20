@@ -1338,6 +1338,132 @@
       }
    };
    ```
+3. Create the model of the post at: `/src/lib/models/post.model.ts` wit the code:
+   ```
+   import mongoose, { Schema, Document, Model } from 'mongoose';
+
+   // Define an interface for the post document
+   interface IPost extends Document {
+   userId: string;
+   content: string;
+   title: string;
+   image?: string;
+   category?: string;
+   //   tags?: string[]; // Tags field is an optional array of strings
+   slug: string;
+   createdAt?: Date;
+   updatedAt?: Date;
+   }
+
+   // Create the schema
+   const postSchema = new Schema<IPost>(
+   {
+      userId: {
+         type: String,
+         required: true,
+      },
+      content: {
+         type: String,
+         required: true,
+      },
+      title: {
+         type: String,
+         required: true,
+         unique: true,
+      },
+      image: {
+         type: String,
+         default:
+         'https://www.hostinger.com/tutorials/wp-content/uploads/sites/2/2021/09/how-to-write-a-blog-post.png',
+      },
+      category: {
+         type: String,
+         default: 'uncategorized',
+      },
+      // tags: {
+      //   type: [String], // Array of strings
+      //   required: false, // Tags are optional
+      // },
+      slug: {
+         type: String,
+         required: true,
+         unique: true,
+      },
+   },
+   { timestamps: true }
+   );
+
+   // Define and export the model
+   const Post: Model<IPost> =
+   mongoose.models.Post || mongoose.model<IPost>('Post', postSchema);
+
+   export default Post;
+
+   ```
+4. Create the api route at: `/src/app/api/post/create/route.ts` with the following code:
+   ```
+   import Post from "../../../../lib/models/post.model";
+   import { connect } from "../../../../lib/mongodb/mongoose";
+   import { currentUser } from "@clerk/nextjs/server";
+
+   // Define the request type
+   interface RequestWithBody extends Request {
+   body?: any;
+   }
+
+   export const createPost = async (req: RequestWithBody) => {
+   const user = await currentUser(); // Fetch current user
+   let data;
+
+   try {
+      data = await req.json(); // Parse request body
+   } catch (err) {
+      return new Response("Invalid request body", { status: 400 });
+   }
+
+   try {
+      await connect(); // Ensure database connection
+
+      // Authorization check
+      if (
+         !user || // Ensure the user exists
+         user.publicMetadata.userMongoId !== data.userMongoId || // Check userMongoId matches
+         user.publicMetadata.isAdmin !== true // Ensure the user is an admin
+      ) {
+         return new Response("Unauthorized", { status: 401 });
+      }
+
+      // Generate a slug from the title
+      const slug = data.title
+         .split("") // Split the title into characters
+         .join("-") // Join back without spaces
+         .toLowerCase() // Convert to lowercase
+         .replace(/[^a-zA-Z0-9-]/g, ""); // Remove non-alphanumeric characters
+
+      // Create a new post
+      const newPost = new Post({
+         userId: user.publicMetadata.userMongoId,
+         content: data.content,
+         title: data.title,
+         image: data.image,
+         category: data.category,
+         slug,
+      });
+
+      // Save the post to the database
+      await newPost.save();
+
+      // Respond with the created post
+      return new Response(JSON.stringify({ newPost }), { status: 200 });
+   } catch (error) {
+      console.error("Error Creating the Post:", error);
+      return new Response("Error Creating the Post", { status: 500 });
+   }
+   };
+
+   ```
+##  Complete Post Page Functionality.
+
  
 
 
