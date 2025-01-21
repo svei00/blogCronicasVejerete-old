@@ -41,7 +41,9 @@ export async function POST(req: Request) {
 
     await newPost.save();
 
-    return new Response(JSON.stringify({ newPost }), { status: 200 });
+    return new Response(JSON.stringify({ 
+      ok: true, 
+      slug: newPost.slug, }), { status: 200 });
   } catch (error) {
     console.error("Error Creating the Post:", error);
     return new Response("Error Creating the Post", { status: 500 });

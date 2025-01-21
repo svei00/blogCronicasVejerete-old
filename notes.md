@@ -1463,11 +1463,13 @@
 
    ```
 ##  Complete Post Page Functionality.
+1. Create the folder `/src/app/post/[slug]/page.tsx` and create a RFC component and check functionality.
+2. Now inside `/src/app/components` create a fule called **CallToAction.tsx** and for now create a RFC.
 
  
 
 
-   2:48:35
+   3:01:01
 
 
  
