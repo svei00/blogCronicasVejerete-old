@@ -1465,6 +1465,8 @@
 ##  Complete Post Page Functionality.
 1. Create the folder `/src/app/post/[slug]/page.tsx` and create a RFC component and check functionality.
 2. Now inside `/src/app/components` create a fule called **CallToAction.tsx** and for now create a RFC.
+3. On `.env.local` add `URL=https://localhost:3000`
+4. Now in `/scr/app/get/route.ts` and add the following code:
 
  
 
