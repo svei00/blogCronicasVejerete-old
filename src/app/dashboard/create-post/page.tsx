@@ -126,7 +126,7 @@ export default function CreatePostPage() {
               id="title"
               className="flex-1"
               onChange={(e) =>
-                setFormData({ ...setFormData, title: e.target.value })
+                setFormData({ ...formData, title: e.target.value })
               }
             />
             <Select

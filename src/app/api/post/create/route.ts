@@ -31,10 +31,11 @@ export const createPost = async (req: RequestWithBody) => {
 
     // Generate a slug from the title
     const slug = data.title
-      .split("") // Split the title into characters
-      .join("-") // Join back without spaces
+      .trim() // Remove leading and trailing spaces
+      .split(" ") // Split the title into words
+      .join("-") // Join words with dashes
       .toLowerCase() // Convert to lowercase
-      .replace(/[^a-zA-Z0-9-]/g, ""); // Remove non-alphanumeric characters
+      .replace(/[^a-z0-9-]/g, ""); // Remove non-alphanumeric characters except dashes
 
     // Create a new post
     const newPost = new Post({
