@@ -1,10 +1,9 @@
-"use client"; // Add this at the very top to make it a client component
-
+import CallToAction from "@/app/components/CallToAction";
+// import RecentPosts from "@/app/components/RecentPosts";
 import { Button } from "flowbite-react";
-import Link from "next/link";
 import Image from "next/image";
-import React, { useState, useEffect, FC } from "react";
-import { callToAction } from "@/components/callToAction";
+import Link from "next/link";
+import React from "react";
 
 interface Post {
   title: string;
@@ -20,32 +19,26 @@ interface PostPageProps {
   };
 }
 
-const PostPage: FC<PostPageProps> = ({ params }) => {
-  const [post, setPost] = useState<Post | null>(null);
+const PostPage: React.FC<PostPageProps> = async ({ params }) => {
+  let post: Post | null = null;
 
-  useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const result = await fetch(process.env.URL + "/api/post/get/", {
-          method: "POST",
-          body: JSON.stringify({ slug: params.slug }),
-          cache: "no-store",
-        });
-        const data = await result.json();
-        setPost(data.posts[0]); // Use `posts` array from the API response
-      } catch (error) {
-        console.error("Error fetching post:", error);
-        setPost({
-          title: "Failed to load post",
-          category: "",
-          image: "",
-          content: "",
-          createdAt: "",
-        });
-      }
+  try {
+    const result = await fetch(`${process.env.URL}/api/post/get`, {
+      method: "POST",
+      body: JSON.stringify({ slug: params.slug }),
+      cache: "no-store",
+    });
+    const data = await result.json();
+    post = data.posts[0];
+  } catch (error) {
+    post = {
+      title: "Failed to load post",
+      category: "",
+      image: "",
+      content: "",
+      createdAt: "",
     };
-    fetchPost();
-  }, [params.slug]);
+  }
 
   if (!post || post.title === "Failed to load post") {
     return (
@@ -70,28 +63,25 @@ const PostPage: FC<PostPageProps> = ({ params }) => {
           {post.category}
         </Button>
       </Link>
-      <div className="mt-10 p-3 max-h-[600px] w-full">
-        <Image
-          src={post.image}
-          alt={post.title}
-          width={1200}
-          height={600}
-          className="object-cover"
-        />
-      </div>
+      <Image
+        src={post.image}
+        alt={post.title}
+        className="mt-10 p-3 max-h-[600px] w-full object-cover"
+      />
       <div className="flex justify-between p-3 border-b border-slate-500 mx-auto w-full max-w-2xl text-xs">
         <span>{new Date(post.createdAt).toLocaleDateString()}</span>
         <span className="italic">
-          {(post.content.length / 1000).toFixed(0)} mins to read
+          {(post.content.length / 1000).toFixed(0)} mins read
         </span>
       </div>
       <div
         className="p-3 max-w-2xl mx-auto w-full post-content"
         dangerouslySetInnerHTML={{ __html: post.content }}
-      />
+      ></div>
       <div className="max-w-4xl mx-auto w-full">
-        <callToAction />
+        <CallToAction />
       </div>
+      {/* <RecentPosts limit={3} /> */}
     </main>
   );
 };

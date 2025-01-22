@@ -1,6 +1,6 @@
 'use client';
 
-import Post from '../../../src/lib/models/post.model';
+import Post from '../../../../lib/models/post.model';
 import { connect } from '@/lib/mongodb/mongoose';
 
 export const POST = async (req: Request): Promise<Response> => {
