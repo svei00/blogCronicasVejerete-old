@@ -1,8 +1,10 @@
+"use client"; // Add this at the very top to make it a client component
+
 import { Button } from "flowbite-react";
 import Link from "next/link";
 import Image from "next/image";
-import { FC } from "react";
-import callToAction from "@/app/components/callToAction";
+import React, { useState, useEffect, FC } from "react";
+import { callToAction } from "@/components/callToAction";
 
 interface Post {
   title: string;
@@ -19,9 +21,9 @@ interface PostPageProps {
 }
 
 const PostPage: FC<PostPageProps> = ({ params }) => {
-  const [post, setPost] = React.useState<Post | null>(null);
+  const [post, setPost] = useState<Post | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchPost = async () => {
       try {
         const result = await fetch(process.env.URL + "/api/post/get/", {
@@ -30,7 +32,7 @@ const PostPage: FC<PostPageProps> = ({ params }) => {
           cache: "no-store",
         });
         const data = await result.json();
-        setPost(data.post[0]);
+        setPost(data.posts[0]); // Use `posts` array from the API response
       } catch (error) {
         console.error("Error fetching post:", error);
         setPost({
@@ -72,8 +74,8 @@ const PostPage: FC<PostPageProps> = ({ params }) => {
         <Image
           src={post.image}
           alt={post.title}
-          width={1200} // Provide dimensions
-          height={600} // Provide dimensions
+          width={1200}
+          height={600}
           className="object-cover"
         />
       </div>

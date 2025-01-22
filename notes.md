@@ -1468,7 +1468,7 @@
 3. On `.env.local` add `URL=https://localhost:3000`
 4. Now in `/scr/app/get/route.ts` and add the following code:
 
- 
+## Add Recent Article Section to the Post Page.
 
 
    3:01:01

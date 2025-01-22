@@ -1,3 +1,5 @@
+'use client';
+
 import Post from '../../../src/lib/models/post.model';
 import { connect } from '@/lib/mongodb/mongoose';
 
