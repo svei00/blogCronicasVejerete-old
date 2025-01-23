@@ -19,18 +19,27 @@ interface PostPageProps {
   };
 }
 
-const PostPage: React.FC<PostPageProps> = async ({ params }) => {
+// Use async destructuring for `params`
+const PostPage = async ({ params }: PostPageProps) => {
+  const { slug } = params; // Ensure `params.slug` is awaited or destructured properly
+
   let post: Post | null = null;
 
   try {
     const result = await fetch(`${process.env.URL}/api/post/get`, {
       method: "POST",
-      body: JSON.stringify({ slug: params.slug }),
+      body: JSON.stringify({ slug }), // Use the destructured slug here
       cache: "no-store",
     });
+
+    if (!result.ok) {
+      throw new Error("Failed to fetch post");
+    }
+
     const data = await result.json();
     post = data.posts[0];
   } catch (error) {
+    console.error("Error fetching post:", error);
     post = {
       title: "Failed to load post",
       category: "",
