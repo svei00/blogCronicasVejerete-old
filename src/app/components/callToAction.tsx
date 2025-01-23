@@ -27,6 +27,8 @@ export default function callToAction() {
         <Image
           src="https://upload.wikimedia.org/wikipedia/commons/4/40/Microsoft-excel.png"
           alt="Excel Logo"
+          width={800} // Set the width in pixels
+          height={600} // Set the height in pixels
         />
       </div>
     </div>

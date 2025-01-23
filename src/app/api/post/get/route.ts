@@ -1,5 +1,3 @@
-'use client';
-
 import Post from '../../../../lib/models/post.model';
 import { connect } from '@/lib/mongodb/mongoose';
 
@@ -14,7 +12,7 @@ export const POST = async (req: Request): Promise<Response> => {
       limit?: string;
       order?: 'asc' | 'desc';
       userId?: string;
-      categoryId?: string;
+      category?: string;
       slug?: string;
       postId?: string;
       searchTerm?: string;
@@ -28,9 +26,9 @@ export const POST = async (req: Request): Promise<Response> => {
     // Query posts from the database
     const posts = await Post.find({
       ...(data.userId && { userId: data.userId }),
-      ...(data.categoryId &&
-        data.categoryId !== 'null' &&
-        data.categoryId !== 'undefined' && { categoryId: data.categoryId }),
+      ...(data.category &&
+        data.category !== 'null' &&
+        data.category !== 'undefined' && { category: data.category }),
       ...(data.slug && { slug: data.slug }),
       ...(data.postId && { _id: data.postId }),
       ...(data.searchTerm && {
@@ -51,7 +49,7 @@ export const POST = async (req: Request): Promise<Response> => {
     const now = new Date();
     const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
 
-    const lastMonthsPosts = await Post.countDocuments({
+    const lastMonthPosts = await Post.countDocuments({
       createdAt: { $gte: oneMonthAgo },
     });
 
@@ -60,7 +58,7 @@ export const POST = async (req: Request): Promise<Response> => {
       JSON.stringify({
         posts,
         totalPosts,
-        lastMonthsPosts,
+        lastMonthPosts,
       }),
       { status: 200 }
     );

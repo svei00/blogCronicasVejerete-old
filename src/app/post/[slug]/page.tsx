@@ -20,13 +20,11 @@ interface PostPageProps {
 }
 
 // Use async destructuring for `params`
-const PostPage = async ({ params }: PostPageProps) => {
-  const { slug } = params; // Ensure `params.slug` is awaited or destructured properly
-
+const PostPage = async ({ params: { slug } }: PostPageProps) => {
   let post: Post | null = null;
 
   try {
-    const result = await fetch(`${process.env.URL}/api/post/get`, {
+    const result = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/post/get`, {
       method: "POST",
       body: JSON.stringify({ slug }), // Use the destructured slug here
       cache: "no-store",
@@ -75,6 +73,8 @@ const PostPage = async ({ params }: PostPageProps) => {
       <Image
         src={post.image}
         alt={post.title}
+        width={800} // Set the width in pixels
+        height={600} // Set the height in pixels
         className="mt-10 p-3 max-h-[600px] w-full object-cover"
       />
       <div className="flex justify-between p-3 border-b border-slate-500 mx-auto w-full max-w-2xl text-xs">
