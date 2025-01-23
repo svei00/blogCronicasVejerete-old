@@ -1463,15 +1463,238 @@
 
    ```
 ##  Complete Post Page Functionality.
-1. Create the folder `/src/app/post/[slug]/page.tsx` and create a RFC component and check functionality.
-2. Now inside `/src/app/components` create a fule called **CallToAction.tsx** and for now create a RFC.
-3. On `.env.local` add `URL=https://localhost:3000`
-4. Now in `/scr/app/get/route.ts` and add the following code:
+1. Create the folder `/src/app/post/[slug]/page.tsx` and create a RFC component and check functionality:
+   ```
+   import CallToAction from "@/app/components/CallToAction";
+   import { Button } from "flowbite-react";
+   import Image from "next/image";
+   import Link from "next/link";
+   import React from "react";
+
+   interface Post {
+   title: string;
+   category: string;
+   image: string;
+   content: string;
+   createdAt: string;
+   }
+
+   interface PostPageProps {
+   params: {
+      slug: string;
+   };
+   }
+
+   // Use async destructuring for `params`
+   const PostPage = async ({ params: { slug } }: PostPageProps) => {
+   let post: Post | null = null;
+
+   try {
+      const result = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/post/get`, {
+         method: "POST",
+         body: JSON.stringify({ slug }), // Use the destructured slug here
+         cache: "no-store",
+      });
+
+      if (!result.ok) {
+         throw new Error("Failed to fetch post");
+      }
+
+      const data = await result.json();
+      post = data.posts[0];
+   } catch (error) {
+      console.error("Error fetching post:", error);
+      post = {
+         title: "Failed to load post",
+         category: "",
+         image: "",
+         content: "",
+         createdAt: "",
+      };
+   }
+
+   if (!post || post.title === "Failed to load post") {
+      return (
+         <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
+         <h2 className="text-3xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl">
+            Post not found
+         </h2>
+         </main>
+      );
+   }
+
+   return (
+      <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
+         <h1 className="text-3xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl">
+         {post.title}
+         </h1>
+         <Link
+         href={`/search?category=${post.category}`}
+         className="self-center mt-5"
+         >
+         <Button color="gray" pill size="xs">
+            {post.category}
+         </Button>
+         </Link>
+         <Image
+         src={post.image}
+         alt={post.title}
+         width={800} // Set the width in pixels
+         height={600} // Set the height in pixels
+         className="mt-10 p-3 max-h-[600px] w-full object-cover"
+         />
+         <div className="flex justify-between p-3 border-b border-slate-500 mx-auto w-full max-w-2xl text-xs">
+         <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+         <span className="italic">
+            {(post.content.length / 1000).toFixed(0)} mins read
+         </span>
+         </div>
+         <div
+         className="p-3 max-w-2xl mx-auto w-full post-content"
+         dangerouslySetInnerHTML={{ __html: post.content }}
+         ></div>
+         <div className="max-w-4xl mx-auto w-full">
+         <CallToAction />
+         </div>
+      </main>
+   );
+   };
+
+   export default PostPage;
+   ```
+2. Now inside `/src/app/components` create a fule called **CallToAction.tsx** and for now create a RFC:
+   ```
+   import { Button } from "flowbite-react";
+   import Image from "next/image";
+
+   export default function callToAction() {
+   return (
+      <div className="flex flex-col sm:flex-row p-3 border border-orange-400 justify-center items-center rounded-tl-3xl rounded-br-3xl text-center">
+         <div className="flex-1 justify-center items-center flex flex-col">
+         <h2 className="text-2xl>">¿Quieres aprender Microsoft Excel?</h2>
+         <p className="text-gray-500 my-2">
+            ¡No pierdas más tiempo! Aprende a manejar Excel de manera eficiente y
+            profesional.
+         </p>
+         <Button
+            gradientDuoTone="purpleToPink"
+            className="rounded-tl-xl rounded-bl-none"
+         >
+            <a
+               href="https://www.ExcelSolutionsV.com"
+               target="_blank"
+               rel="noopener noreferrer"
+            >
+               Blog Excel SolutionsV
+            </a>
+         </Button>
+         </div>
+         <div className="p-7 flex-1">
+         <Image
+            src="https://upload.wikimedia.org/wikipedia/commons/4/40/Microsoft-excel.png"
+            alt="Excel Logo"
+            width={800} // Set the width in pixels
+            height={600} // Set the height in pixels
+         />
+         </div>
+      </div>
+   );
+   }
+
+   ```
+3. On `.env.local` add `NEXT_PUBLIC_URL=http://localhost:3000`
+4. Now in `/scr/app/api/post/get/route` and add the following code:
+   ```
+   import Post from '../../../../lib/models/post.model';
+   import { connect } from '@/lib/mongodb/mongoose';
+
+   export const POST = async (req: Request): Promise<Response> => {
+   // Connect to the database
+   await connect();
+
+   try {
+      // Parse request data
+      const data: {
+         startIndex?: string;
+         limit?: string;
+         order?: 'asc' | 'desc';
+         userId?: string;
+         category?: string;
+         slug?: string;
+         postId?: string;
+         searchTerm?: string;
+      } = await req.json();
+
+      // Parse and set default values for pagination and sorting
+      const startIndex = parseInt(data.startIndex || '0', 10);
+      const limit = parseInt(data.limit || '9', 10);
+      const sortDirection = data.order === 'asc' ? 1 : -1;
+
+      // Query posts from the database
+      const posts = await Post.find({
+         ...(data.userId && { userId: data.userId }),
+         ...(data.category &&
+         data.category !== 'null' &&
+         data.category !== 'undefined' && { category: data.category }),
+         ...(data.slug && { slug: data.slug }),
+         ...(data.postId && { _id: data.postId }),
+         ...(data.searchTerm && {
+         $or: [
+            { title: { $regex: data.searchTerm, $options: 'i' } },
+            { content: { $regex: data.searchTerm, $options: 'i' } },
+         ],
+         }),
+      })
+         .sort({ updatedAt: sortDirection })
+         .skip(startIndex)
+         .limit(limit);
+
+      // Get total post counts
+      const totalPosts = await Post.countDocuments();
+
+      // Calculate posts from the last month
+      const now = new Date();
+      const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+
+      const lastMonthPosts = await Post.countDocuments({
+         createdAt: { $gte: oneMonthAgo },
+      });
+
+      // Return the response with the data
+      return new Response(
+         JSON.stringify({
+         posts,
+         totalPosts,
+         lastMonthPosts,
+         }),
+         { status: 200 }
+      );
+   } catch (error) {
+      console.error('Error fetching posts:', error);
+
+      // Return error response
+      return new Response(
+         JSON.stringify({
+         error: 'An error occurred while fetching posts.',
+         }),
+         { status: 500 }
+      );
+   }
+   };
+   ```
 
 ## Add Recent Article Section to the Post Page.
+1. Create the componet <RecentPost> at `/src/app/components/RecentPost.tsx`
+   1.1 Addt the following code:
+   ```
+
+   ```
+2. Create the PostCard component at `/src/app/components/PostCard.tsx`:
 
 
-   3:01:01
+## Complete the home page
+
+3:08:23
 
 
  
