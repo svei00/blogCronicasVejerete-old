@@ -12,10 +12,10 @@ interface SideBarData {
   category: string;
 }
 
-// Define the shape of a Post object
+// Define the shape of a Post object, but allow additional properties
 interface Post {
-  id: string;
-  [key: string]: any;
+  id: string; // Mandatory field
+  [key: string]: any; // Allow additional properties without explicitly typing them
 }
 
 export default function Search() {
@@ -137,8 +137,65 @@ export default function Search() {
   };
 
   return (
-    <div className="font-bold text-white bg-purple-600 text-center">
-      Test Search Page
+    <div className="flex flex-col md:flex-row">
+      <div className="p-7 border-b md:border-r md:min-h-screen border-gray-500">
+        <form className="flex flex-col gap-8" onSubmit={handleSubmit}>
+          <div className="flex items-center gap-2">
+            <label className="whitespace-nowrap font-semibold">
+              Search Term:
+            </label>
+            <TextInput
+              placeholder="Search..."
+              id="searchTerm"
+              type="text"
+              value={sideBarData.searchTerm}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="font-semibold">Sort:</label>
+            <Select onChange={handleChange} id="sort">
+              <option value="desc">Latest</option>
+              <option value="asc">Oldest</option>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="font-semibold">Category:</label>
+            <Select onChange={handleChange} id="category">
+              <option value="uncategorized">Uncategorized</option>
+              <option value="alucines">Alucines</option>
+              <option value="pensamientos">Pensamientos</option>
+              <option value="announcements">Announcements</option>
+              <option value="draft">Draft</option>
+            </Select>
+          </div>
+          <Button type="submit" gradientDuoTone="purpleToBlue" outline>
+            Apply Filters
+          </Button>
+        </form>
+      </div>
+      <div className="w-full">
+        <h1 className="text-3xl font-semibold sm:border-b border-gray-500 p-3 mt-5">
+          Posts Results
+        </h1>
+        <div className="p-7 flex flex-wrap gap-4">
+          {!loading && posts.length === 0 && (
+            <p className="text-xl text-gray-500">No Post Have been Found</p>
+          )}
+          {loading && <p className="text-xl text-gray-500">Loading...</p>}
+          {!loading &&
+            posts &&
+            posts.map((post) => <PostCard key={post.id} post={post} />)}
+          {showMore && (
+            <button
+              onClick={handleShowMore}
+              className="text-orange-500 text-lg hover:text-purple-600 p-7 w-full"
+            >
+              Show More
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
