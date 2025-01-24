@@ -1758,10 +1758,108 @@
    export default PostCard;
    ```
 
-
 ## Complete the home page
+1. Go to `/src/app/page.tsx` and add the following code:
+   ```
+   import Link from "next/link";
+   import CallToAction from "./components/CallToAction";
+   import RecentPost from "./components/RecentPosts";
 
-3:08:23
+   export default async function Home(): Promise<JSX.Element> {
+   let posts: any = null;
+
+   try {
+      const result = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/post/get`, {
+         method: "POST",
+         headers: {
+         "Content-Type": "application/json", // Ensuring headers are correct
+         },
+         body: JSON.stringify({ limit: 9, order: "desc" }),
+         cache: "no-store",
+      });
+
+      if (!result.ok) {
+         throw new Error(`Failed to fetch posts: ${result.statusText}`);
+      }
+
+      const data = await result.json();
+      posts = data.posts;
+   } catch (error) {
+      console.error("Error getting posts:", error);
+   }
+
+   return (
+      <div className="flex flex-col justify-center items-center">
+         <div className="flex flex-col gap-6 p-28 px-3 max-w-6xl mx-auto">
+         <h1 className="text-3xl text-purple-500 font-bold lg:text-6xl">
+            Bienvenidos al Blog de Cro{"\u0301"}nicas del Vejerete{" "}
+            {/* can be used &oacute; too */}
+         </h1>
+         <p className="text-gray-500 text-sm sm:text-base">
+            Blog sobre diferentes temas desde un punto de vista personal
+         </p>
+         <Link
+            href="/search"
+            className="text-xs sm:text-sm text-orange-500 font-bold hover:text-purple-600"
+         >
+            Ver todas las publicaciones
+         </Link>
+         </div>
+         <div className="p-3 bg-slate-100 dark:bg-slate-700">
+         <CallToAction />
+         </div>
+         <div className="p-3 flex flex-col gap-8 py-7">
+         <RecentPost limit={9} />
+         <Link
+            href="/search?category=null"
+            className="text-lg text-orange-500 font-bold hover:text-purple-600 text-center"
+         >
+            Ver todas las publicaciones
+         </Link>
+         </div>
+      </div>
+   );
+   }
+   ```
+
+## Complete the Search Page.
+1. Go back to the <Header> component at `src/app/components/Header.tsx`
+2. Around line 10 add: `import { useRouter, useSearchParams } from "next/navigation";`
+3. Around line of code 15 add:
+   ```
+   const router = useRouter();
+   const [searchTerm, setSearchTerm] = useState("");
+   const searchParams = useSearchParams();
+   ```
+4. Around line of code 20 add:
+   ```
+   useEffect(() => {
+      const urlParams = new URLSearchParams(searchParams);
+      const searchTermFromUrl = urlParams.get("searchTerm");
+      if (searchTermFromUrl) {
+         setSearchTerm(searchTermFromUrl);
+      }
+   }, [searchParams]);
+   ```
+5. Around line of code 55 add:
+   ```
+   value={searchTerm}
+   onChange={(e) => setSearchTerm(e.target.value)}
+   ```
+6. Around line of code 50 inside the <form> add: `handleSubmit` 
+7. Around line of code 20 add the **handleSubmit** function:
+   ```
+     const handleSubmit = (e) => {
+      e.preventDefault();
+      const urlParams = new URLSearchParams(searchParams);
+      urlParams.set("searchTerm", searchTerm);
+      const searchQuery = urlParams.toString();
+      router.push(`/search?${searchQuery}`);
+   };
+   ```
+8. Create the folder `/src/app/search/page.tsx` and add RFC.
+
+3:21:34 setSideBarData  
 
 
  
