@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
+import Footer from "./components/Footer";
 import { ThemeProvider } from "next-themes";
 import ThemeComp from "./ThemeComp";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -39,6 +40,7 @@ export default function RootLayout({
               <div className="bg-white text-gray-700 dark:text-gray-200 dark:bg-[rgb(16,23,42)] min-h-screen">
                 <Header />
                 {children}
+                <Footer />
               </div>
             </ThemeComp>
           </ThemeProvider>
