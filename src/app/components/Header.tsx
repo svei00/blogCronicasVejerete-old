@@ -85,6 +85,7 @@ const Header: FC = () => {
               appearance={{
                 baseTheme: theme === "light" ? neobrutalism : dark,
               }}
+              userProfileUrl="/dashboard?tab=profile"
             />
           </SignedIn>
           <SignedOut>

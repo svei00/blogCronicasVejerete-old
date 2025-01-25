@@ -2228,8 +2228,15 @@
    ```
 
 ## Complete the Profile Page in the Dashboard.
+1. Go back to `/src/app/components/Header.tsx`around line 90 of code before the closing tag of <SignedIn>:
+   `userProfileUrl="/dashboard?tab=profile"`
+2. Create a RFC page on `/src/app/components/DashSidebar.tsx`
+3. Create another RFC page on `/src/app/components/DashProfile.tsx`
+4. Next create one more RFC page on `src/app/components/DashPost.tsx`
+5. Create another RFC page on `src/app/components/DashUsers.tsx`
+6. Finnally one more RFC on `src/app/components/DashboardComp.tsx`
 
-3:21:34 setSideBarData  
+3:33:33 setSideBarData  
 
 
  
