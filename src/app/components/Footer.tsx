@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   BsFacebook,
   BsInstagram,
-  BsTwitter,
+  BsTwitterX,
   BsGithub,
   BsTiktok,
   BsDribbble,
@@ -96,7 +96,7 @@ const FooterComp: React.FC = () => {
             <Footer.Icon href="#" icon={BsFacebook} />
             <Footer.Icon href="#" icon={BsInstagram} />
             <Footer.Icon href="https://github.com/svei00/" icon={BsGithub} />
-            <Footer.Icon href="#" icon={BsTwitter} />
+            <Footer.Icon href="#" icon={BsTwitterX} />
             <Footer.Icon href="#" icon={BsTiktok} />
             <Footer.Icon href="#" icon={BsDribbble} />
           </div>
