@@ -2230,11 +2230,173 @@
 ## Complete the Profile Page in the Dashboard.
 1. Go back to `/src/app/components/Header.tsx`around line 90 of code before the closing tag of <SignedIn>:
    `userProfileUrl="/dashboard?tab=profile"`
-2. Create a RFC page on `/src/app/components/DashSidebar.tsx`
-3. Create another RFC page on `/src/app/components/DashProfile.tsx`
-4. Next create one more RFC page on `src/app/components/DashPost.tsx`
-5. Create another RFC page on `src/app/components/DashUsers.tsx`
-6. Finnally one more RFC on `src/app/components/DashboardComp.tsx`
+2. Go to `/src/app/dashboard/page.tsx` and add the following code:
+   ```
+   "use client";
+
+   import { useEffect, useState } from "react";
+   import DashSidebar from "../components/DashSidebar";
+   import DashProfile from "../components/DashProfile";
+   import { useSearchParams } from "next/navigation";
+   import DashPost from "../components/DashPost";
+   import DashUsers from "../components/DashUsers";
+   import DashboardComp from "../components/DashboardComp";
+
+   export default function Dashboard() {
+   const searchParams = useSearchParams();
+   const [tab, setTab] = useState([]);
+
+   useEffect(() => {
+      const urlParams = new URLSearchParams(searchParams);
+      const tabFromUrl = urlParams.get("tab");
+      if (tabFromUrl) {
+         setTab(tabFromUrl);
+      }
+   }, [searchParams]);
+
+   return (
+      <div className="min-h-screen flex flex-col md:flex-row">
+         <div className="md:w-56">
+         {/* Sidebar */}
+         <DashSidebar />
+         </div>
+         {/* Profile */}
+         {tab === "profile" && <DashProfile />}
+
+         {/* Posts */}
+         {tab === "posts" && <DashPost />}
+
+         {/* Users */}
+         {tab === "users" && <DashUsers />}
+
+         {/* Dashboard */}
+         {tab === "dash" && <DashboardComp />}
+      </div>
+   );
+   }
+   ```
+3. Create a RFC page on `/src/app/components/DashSidebar.tsx` and add the following code:
+   ```
+   "use client";
+
+   import { Sidebar } from "flowbite-react";
+   import {
+   HiUser,
+   HiArrowSmRight,
+   HiDocumentText,
+   HiOutlineUserGroup,
+   HiChartPie,
+   } from "react-icons/hi";
+   import { useEffect, useState } from "react";
+   import { useSearchParams } from "next/navigation";
+   import { SignOutButton } from "@clerk/nextjs";
+   import { useUser } from "@clerk/nextjs";
+   import Link from "next/link";
+
+   interface PublicMetadata {
+   isAdmin?: boolean;
+   }
+
+   export default function DashSideBar() {
+   const [tab, setTab] = useState<string>(""); // Explicit type for useState
+   const searchParams = useSearchParams();
+   const { user, isSignedIn } = useUser<{ publicMetadata: PublicMetadata }>();
+
+   useEffect(() => {
+      const tabFromUrl = searchParams.get("tab");
+      if (tabFromUrl) {
+         setTab(tabFromUrl);
+      }
+   }, [searchParams]);
+
+   if (!isSignedIn) {
+      return null;
+   }
+
+   return (
+      <Sidebar className="w-full md:w-56">
+         <Sidebar.Items>
+         <Sidebar.ItemGroup className="flex flex-col gap-1">
+            {user?.publicMetadata?.isAdmin && (
+               <Link href="/dashboard?tab=dash">
+               <Sidebar.Item
+                  active={tab === "dash" || !tab}
+                  icon={HiChartPie}
+                  as="div"
+               >
+                  Dashboard
+               </Sidebar.Item>
+               </Link>
+            )}
+            <Link href="/dashboard?tab=profile">
+               <Sidebar.Item
+               active={tab === "profile"}
+               icon={HiUser}
+               label={user?.publicMetadata?.isAdmin ? "Admin" : "User"}
+               labelColor="dark"
+               as="div"
+               >
+               Profile
+               </Sidebar.Item>
+            </Link>
+            {user?.publicMetadata?.isAdmin && (
+               <Link href="/dashboard?tab=posts">
+               <Sidebar.Item
+                  active={tab === "posts"}
+                  icon={HiDocumentText}
+                  as="div"
+               >
+                  Posts
+               </Sidebar.Item>
+               </Link>
+            )}
+            {user?.publicMetadata?.isAdmin && (
+               <Link href="/dashboard?tab=users">
+               <Sidebar.Item
+                  active={tab === "users"}
+                  icon={HiOutlineUserGroup}
+                  as="div"
+               >
+                  Users
+               </Sidebar.Item>
+               </Link>
+            )}
+            <Sidebar.Item icon={HiArrowSmRight} className="cursor-pointer">
+               <SignOutButton />
+            </Sidebar.Item>
+         </Sidebar.ItemGroup>
+         </Sidebar.Items>
+      </Sidebar>
+   );
+   }
+   ```
+4. Create another RFC page on `/src/app/components/DashProfile.tsx` and add the following code:
+   ```
+   import { UserProfile } from "@clerk/nextjs";
+   import { dark, neobrutalism } from "@clerk/themes";
+   import { useTheme } from "next-themes";
+
+   export default function DashProfile() {
+   const theme = useTheme();
+
+   return (
+      <div className="flex justify-center items-center w-full">
+         <UserProfile
+         appearance={{
+            baseTheme: theme.theme === "dark" ? dark : neobrutalism,
+         }}
+         />
+      </div>
+   );
+   }
+   ;
+   ```
+5. Next create one more RFC page on `src/app/components/DashPost.tsx`
+6. Create another RFC page on `src/app/components/DashUsers.tsx`
+7. Finnally one more RFC on `src/app/components/DashboardComp.tsx`
+
+## Show the User Posts in the Dashboard.
+
 
 3:33:33 setSideBarData  
 

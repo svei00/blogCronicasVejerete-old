@@ -1,5 +1,17 @@
-import React from "react";
+import { UserProfile } from "@clerk/nextjs";
+import { dark, neobrutalism } from "@clerk/themes";
+import { useTheme } from "next-themes";
 
 export default function DashProfile() {
-  return <div>DashProfile</div>;
+  const theme = useTheme();
+
+  return (
+    <div className="flex justify-center items-center w-full">
+      <UserProfile
+        appearance={{
+          baseTheme: theme.theme === "dark" ? dark : neobrutalism,
+        }}
+      />
+    </div>
+  );
 }

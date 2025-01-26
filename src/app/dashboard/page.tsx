@@ -30,7 +30,7 @@ export default function Dashboard() {
       {tab === "profile" && <DashProfile />}
 
       {/* Posts */}
-      {tab === "post" && <DashPost />}
+      {tab === "posts" && <DashPost />}
 
       {/* Users */}
       {tab === "users" && <DashUsers />}
