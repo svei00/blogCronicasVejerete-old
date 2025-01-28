@@ -2447,7 +2447,7 @@
    }
    };
    ```
-3. 
+3. Create the Update Page on `/src/app/dashboard/update-post/[id]/page.ts`
 
 
 3:45:42 setSideBarData  
