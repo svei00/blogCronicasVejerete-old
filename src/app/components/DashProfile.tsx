@@ -8,6 +8,7 @@ export default function DashProfile() {
   return (
     <div className="flex justify-center items-center w-full">
       <UserProfile
+        routing="hash"
         appearance={{
           baseTheme: theme.theme === "dark" ? dark : neobrutalism,
         }}

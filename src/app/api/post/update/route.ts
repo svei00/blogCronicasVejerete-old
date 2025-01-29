@@ -1,46 +1,44 @@
-import Post from "../../../../lib/models/post.model.js"
-import { connect } from "../../../../lib/mongodb/mongoose.js"
-import { currentUser } from "@clerk/nextjs/server"
+import Post from "../../../../lib/models/post.model";
+import { connect } from "../../../../lib/mongodb/mongoose";
+import { currentUser } from "@clerk/nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export const PUT = async (req) => {
+export const PUT = async (req: NextRequest): Promise<NextResponse> => {
     const user = await currentUser();
 
     try {
         await connect();
         const data = await req.json();
 
-        // console.log("User", user?.publicMetadata)
-        // console.log("Data", data);
-
-        if(
+        if (
             !user ||
             user.publicMetadata.userMongoId !== data.userMongoId ||
             user.publicMetadata.isAdmin !== true
         ) {
-            return new Response("Unauthorized", { status: 401 })
+            return new NextResponse("Unauthorized", { status: 401 });
         }
 
         const newPost = await Post.findByIdAndUpdate(
             data.postId,
             {
                 $set: {
-                title: data.title,
-                content: data.content,
-                category: data.category,
-                image: data.image,
+                    title: data.title,
+                    content: data.content,
+                    category: data.category,
+                    image: data.image,
                 },
             },
-            {new: true}
+            { new: true }
         );
 
-    return new Response(JSON.stringify(newPost), {
-        status: 200,
-    });    
-
+        return new NextResponse(JSON.stringify(newPost), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+        });
     } catch (error) {
-        console.log("Error Creating Post", error)
-        return new Response("Error Creating Post", {
+        console.error("Error Updating Post", error);
+        return new NextResponse("Error Updating Post", {
             status: 500,
-        })        
+        });
     }
 };
