@@ -2920,6 +2920,12 @@
    ```
    
    ```
+2. Create the route to get users at `/src/app/api/user/get/route.ts`:
+   ```
+
+   ```
+
+## Complete the App Overview Inside the Admin Dashboard.
 
 3:45:42 setSideBarData  
 
