@@ -9,7 +9,7 @@ import { useUser } from "@clerk/nextjs";
 interface UserType {
   _id: string;
   createdAt: string;
-  profilePicture?: string; // ✅ Correct property for image
+  profilePicture?: string;
   username: string;
   email: string;
   isAdmin: boolean;
@@ -21,6 +21,8 @@ export default function DashUsers() {
 
   useEffect(() => {
     const fetchUsers = async () => {
+      if (!user?.publicMetadata?.isAdmin) return;
+
       try {
         const res = await fetch("/api/user/get", {
           method: "POST",
@@ -28,7 +30,7 @@ export default function DashUsers() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            userMongoId: user?.publicMetadata?.userMongoId,
+            userMongoId: user.publicMetadata.userMongoId, // Ensure user is fully loaded
           }),
         });
 
@@ -37,7 +39,7 @@ export default function DashUsers() {
           setUsers(
             data.users.map((user: UserType) => ({
               ...user,
-              isAdmin: Boolean(user.isAdmin), // Ensure isAdmin is always a boolean
+              isAdmin: !!user.isAdmin, // Ensure isAdmin is always a boolean
             }))
           );
         }
@@ -46,10 +48,10 @@ export default function DashUsers() {
       }
     };
 
-    if (user?.publicMetadata?.isAdmin) {
+    if (user && isLoaded) {
       fetchUsers();
     }
-  }, [user?.publicMetadata?.isAdmin, user?.publicMetadata?.userMongoId]);
+  }, [user, isLoaded]);
 
   if (!user?.publicMetadata?.isAdmin && isLoaded) {
     return (
