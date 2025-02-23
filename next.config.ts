@@ -4,7 +4,18 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ["firebasestorage.googleapis.com", 'upload.wikimedia.org'],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "firebasestorage.googleapis.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "upload.wikimedia.org",
+        pathname: "/**",
+      },
+    ],
   },
   webpack: (config) => {
     config.resolve.alias = {
@@ -16,4 +27,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-

@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Flowbite's CSS */
+@import url("flowbite/dist/flowbite.css");
+
 body {
   height: 100vh;
 }

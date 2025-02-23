@@ -1,12 +1,12 @@
 import flowbite from 'flowbite-react/tailwind';
-import { Config } from 'tailwindcss';
+import { Config } from "tailwindcss";
 
 const config: Config = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-    flowbite.content(),
+    flowbite.content(), // This ensures Flowbite classes are scanned
   ],
   theme: {
     extend: {
@@ -66,7 +66,9 @@ const config: Config = {
       }),
     },
   },
-  plugins: [flowbite.plugin()], // Use the corrected plugin variable
+  plugins: [
+    flowbite.plugin()
+], // Uses Flowbite's Tailwind plugin
 };
 
 export default config;
