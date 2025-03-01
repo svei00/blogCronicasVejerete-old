@@ -1,12 +1,12 @@
 "use client";
+import React from "react";
 import { Button, Navbar, TextInput } from "flowbite-react";
 import Link from "next/link";
 import { AiOutlineSearch } from "react-icons/ai";
 import { FaMoon } from "react-icons/fa";
 import { usePathname } from "next/navigation";
-import React from "react";
 
-export default function Header(): JSX.Element {
+export default function Header(): React.ReactElement {
   const path = usePathname();
   return (
     <Navbar className="border-b-2">
@@ -15,7 +15,7 @@ export default function Header(): JSX.Element {
         className="self-center whitespace-nowrap text-sm sm:text-xl font-semibold dark:text-white"
       >
         <span className="px-2 py-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg text-white">
-          Cro{"\u0301"}nica del Vejerete
+          Cro{"\u0301"}nicas del Vejerete
         </span>
         Blog
       </Link>
