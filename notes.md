@@ -3087,7 +3087,7 @@
 
 3:45:42 setSideBarData  
 
-** Recover the file. Test
+** Recover the file. Test check the tailwind 3. issu
  
 ## Notes
 * Whith this line // eslint-disable-next-line @typescript-eslint/ban-ts-comment you can ommit Eslint validations.
