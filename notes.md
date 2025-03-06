@@ -3087,7 +3087,7 @@
 
 3:45:42 setSideBarData  
 
-** Recover the file. Test check the tailwind 3. issue. Look for the solution.
+** Recover the file. Test check the tailwind 3. issue. Look for the solution. Working with Document ifonmation
  
 ## Notes
 * Whith this line // eslint-disable-next-line @typescript-eslint/ban-ts-comment you can ommit Eslint validations.
