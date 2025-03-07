@@ -23,7 +23,14 @@ const ThemeComp: FC<ThemeCompProps> = ({ children }) => {
   }
 
   return (
-    <>{children}</> // Render children when the component is mounted
+    <>
+      <div>
+        <div className="bg-white text-gray-700 dark:text-gray-200 dark:bg-gray-900 min-h-screen">
+          {" "}
+          {children}
+        </div>
+      </div>
+    </> // Render children when the component is mounted
   );
 };
 
