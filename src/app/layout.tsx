@@ -37,7 +37,7 @@ export default function RootLayout({
         >
           <ThemeProvider attribute="class" enableSystem>
             <ThemeComp>
-              <div className="bg-white text-gray-700 dark:text-gray-200 dark:bg-[rgb(16,23,42)] min-h-screen">
+              <div className="bg-white text-gray-700 dark:text-gray-200 dark:bg-gray-900 min-h-screen">
                 <Header />
                 {children}
                 <Footer />
