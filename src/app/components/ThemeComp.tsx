@@ -25,7 +25,7 @@ const ThemeComp: FC<ThemeCompProps> = ({ children }) => {
   return (
     <>
       <div>
-        <div className="bg-yellow-400 text-gray-700 dark:text-gray-200 dark:bg-gray-900 min-h-screen">
+        <div className="bg-yellow-400 text-gray-700 dark:text-gray-200 dark:bg-[rgb(16,23,42)] min-h-screen">
           {" "}
           {children}
         </div>
