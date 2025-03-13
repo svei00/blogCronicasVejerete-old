@@ -1,0 +1,53 @@
+name: Deploy Node.js app to AlmaLinux
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "22" # Using Node.js 22 as per your environment
+
+      - name: Deploy to VPS
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          VPS_IP: ${{ secrets.VPS_IP }}
+        run: |
+          # Set up SSH for secure connection
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.VPS_IP }} >> ~/.ssh/known_hosts
+
+          # Connect to the VPS and deploy
+          ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=120 -i ~/.ssh/id_ed25519 vefrmeistari@${{ secrets.VPS_IP }} << 'EOF'
+            set -e
+
+            # Mark the repository as safe
+            git config --global --add safe.directory /var/www/_blogCronicasDelVejerete
+            
+            # Navigate to the project directory
+            cd /var/www/_blogCronicasDelVejerete
+
+            # Pull the latest code from the repository
+            git pull origin main
+
+            # Install backend dependencies
+            npm install
+
+            # Build the app in production mode
+            NODE_ENV=production npm run build
+
+            # Start or restart the backend using PM2
+            pm2 start --name next-blog || pm2 restart next-blog
+          EOF
