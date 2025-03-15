@@ -3086,7 +3086,11 @@
 ## Complete the App Overview Inside the Admin Dashboard.
 
 ** Deploy into server via Github Actions.**
-1. Use the code:
+Automatice the deployment with Github Actions.
+  - Go to your repository -> Settings -> Secrets and Variables -> Actions.
+    - DEPLOY_SSH_KEY: Paste the private Key if the server.
+    - VPS_IP: Paste the IP of the server.
+  - Create the file `github/workflows/deploy.yml` with the following code:
    ```
    name: Deploy Node.js app to AlmaLinux
 
@@ -3142,10 +3146,19 @@ jobs:
             pm2 start --name next-blog || pm2 restart next-blog
           EOF
    ```
+- Deploy to Github:
+    - `git add .`
+    - `git commit -m "Add GitHub Actions deployment script"`
+    - `git push origin main`
+  - Go to Github actions and check if the deployment was succesful (Also you can receibe deploy failed email if any error)
+  - Troubleshooting and Tips.
+    - Verify if you have the right permisions: `chmod 600 ~/.ssh/id_ed25519`
+    - Test manually by SSH-into the VPS: `ssh -i ~/.ssh/id_ed25519 user@VPS_IP`
+    - Confirm that the app managed is it pm2 `pm2 list`
+    - Check logs of any error: `pm2 logs your-web` 
 
 3:45:42 setSideBarData  
 
-** Recover the file. Test check the tailwind 3. issue. Look for the solution. Working with Document ifonmation. The issue was on the layout number check again in Sahand file.
  
 ## Notes
 * Whith this line // eslint-disable-next-line @typescript-eslint/ban-ts-comment you can ommit Eslint validations.
