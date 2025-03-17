@@ -3296,8 +3296,8 @@
 
 ** Deploy into server via Github Actions.**
 Automatice the deployment with Github Actions.
-  - Go to your repository -> Settings -> Secrets and Variables -> Actions.
-    - DEPLOY_SSH_KEY: Paste the private Key if the server.
+  - Go to your repository -> Settings -> Secrets and Variables -> Actions. Go to "New Repository Secret" and create the following secrets:
+    - DEPLOY_SSH_KEY: Paste the private Key of the server. You can get it from the one you created on Hostinger.
     - VPS_IP: Paste the IP of the server.
   - Create the file `github/workflows/deploy.yml` with the following code:
    ```
