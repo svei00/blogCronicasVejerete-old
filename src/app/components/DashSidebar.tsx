@@ -14,15 +14,25 @@ import { SignOutButton } from "@clerk/nextjs";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 
+// Define the structure for public metadata
 interface PublicMetadata {
-  isAdmin?: boolean;
+  isAdmin?: boolean; // Optional admin flag
 }
 
 export default function DashSideBar() {
-  const [tab, setTab] = useState<string>(""); // Explicit type for useState
-  const searchParams = useSearchParams();
-  const { user, isSignedIn } = useUser<{ publicMetadata: PublicMetadata }>();
+  // State to track the active tab
+  const [tab, setTab] = useState<string>("");
 
+  // Get search parameters from the URL
+  const searchParams = useSearchParams();
+
+  // Get user information from Clerk (removed incorrect type argument)
+  const { user, isSignedIn } = useUser();
+
+  // Extract publicMetadata and assert its type for TypeScript safety
+  const publicMetadata = user?.publicMetadata as PublicMetadata;
+
+  // Effect to update the active tab based on URL query parameters
   useEffect(() => {
     const tabFromUrl = searchParams.get("tab");
     if (tabFromUrl) {
@@ -30,6 +40,7 @@ export default function DashSideBar() {
     }
   }, [searchParams]);
 
+  // If user is not signed in, don't render the sidebar
   if (!isSignedIn) {
     return null;
   }
@@ -38,7 +49,8 @@ export default function DashSideBar() {
     <Sidebar className="w-full md:w-56">
       <Sidebar.Items>
         <Sidebar.ItemGroup className="flex flex-col gap-1">
-          {user?.publicMetadata?.isAdmin && (
+          {/* Show Dashboard link only if the user is an admin */}
+          {publicMetadata?.isAdmin && (
             <Link href="/dashboard?tab=dash">
               <Sidebar.Item
                 active={tab === "dash" || !tab}
@@ -49,18 +61,22 @@ export default function DashSideBar() {
               </Sidebar.Item>
             </Link>
           )}
+
+          {/* Profile Link - Visible to all users */}
           <Link href="/dashboard?tab=profile">
             <Sidebar.Item
               active={tab === "profile"}
               icon={HiUser}
-              label={user?.publicMetadata?.isAdmin ? "Admin" : "User"}
+              label={publicMetadata?.isAdmin ? "Admin" : "User"}
               labelColor="dark"
               as="div"
             >
               Profile
             </Sidebar.Item>
           </Link>
-          {user?.publicMetadata?.isAdmin && (
+
+          {/* Posts Link - Only visible to admins */}
+          {publicMetadata?.isAdmin && (
             <Link href="/dashboard?tab=posts">
               <Sidebar.Item
                 active={tab === "posts"}
@@ -71,7 +87,9 @@ export default function DashSideBar() {
               </Sidebar.Item>
             </Link>
           )}
-          {user?.publicMetadata?.isAdmin && (
+
+          {/* Users Management - Only visible to admins */}
+          {publicMetadata?.isAdmin && (
             <Link href="/dashboard?tab=users">
               <Sidebar.Item
                 active={tab === "users"}
@@ -82,6 +100,8 @@ export default function DashSideBar() {
               </Sidebar.Item>
             </Link>
           )}
+
+          {/* Sign-out button */}
           <Sidebar.Item icon={HiArrowSmRight} className="cursor-pointer">
             <SignOutButton />
           </Sidebar.Item>
