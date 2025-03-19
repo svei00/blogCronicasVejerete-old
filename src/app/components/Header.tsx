@@ -1,9 +1,10 @@
 "use client";
+
 import React, { FC, useEffect, useState } from "react";
 import { Button, Navbar, TextInput } from "flowbite-react";
 import Link from "next/link";
 import { AiOutlineSearch } from "react-icons/ai";
-import { FaMoon, FaSun } from "react-icons/fa"; // Icons for themes
+import { FaMoon, FaSun } from "react-icons/fa"; // Icons for dark/light mode
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
@@ -11,21 +12,38 @@ import { dark, neobrutalism } from "@clerk/themes";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const Header: FC = () => {
+  // Get the current pathname to determine which nav link is active.
   const path: string = usePathname();
-  const { theme, setTheme, systemTheme } = useTheme(); // Access systemTheme
+
+  // Access theme values and setter from next-themes.
+  const { theme, setTheme, systemTheme } = useTheme();
+
+  // State to check if component is mounted (helps prevent hydration issues).
   const [mounted, setMounted] = useState(false);
+
+  // Next.js router for programmatic navigation.
   const router = useRouter();
+
+  // State to hold the search term from the input.
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Get URL search parameters.
   const searchParams = useSearchParams();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  // Form submit handler with explicit type annotation for the event.
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); // Prevent the default form submission behavior
+    // Create a URLSearchParams object from the current search parameters.
     const urlParams = new URLSearchParams(searchParams);
+    // Set or update the searchTerm parameter.
     urlParams.set("searchTerm", searchTerm);
+    // Convert parameters to a query string.
     const searchQuery = urlParams.toString();
+    // Navigate to the search page with the updated query.
     router.push(`/search?${searchQuery}`);
   };
 
+  // Effect to set the search term state if it exists in the URL.
   useEffect(() => {
     const urlParams = new URLSearchParams(searchParams);
     const searchTermFromUrl = urlParams.get("searchTerm");
@@ -34,19 +52,22 @@ const Header: FC = () => {
     }
   }, [searchParams]);
 
-  // Ensure the component is mounted before rendering to prevent hydration mismatch
+  // Effect to mark the component as mounted after the first render to prevent hydration mismatches.
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted) return null; // Prevent rendering on the server
+  // If not mounted yet, don't render anything.
+  if (!mounted) return null;
 
-  // Determine the icon based on theme and system settings
+  // Determine the active theme: if theme is "system", use systemTheme; otherwise, use the selected theme.
   const currentTheme = theme === "system" ? systemTheme : theme;
 
   return (
     <>
+      {/* Main navigation bar */}
       <Navbar className="border-b-2">
+        {/* Brand/Logo link */}
         <Link
           href="/"
           className="self-center whitespace-nowrap text-sm sm:text-xl font-semibold dark:text-white"
@@ -57,6 +78,7 @@ const Header: FC = () => {
           Blog
         </Link>
 
+        {/* Search form */}
         <form onSubmit={handleSubmit}>
           <TextInput
             type="text"
@@ -68,8 +90,9 @@ const Header: FC = () => {
           />
         </form>
 
+        {/* Container for theme toggle and user authentication buttons */}
         <div className="flex gap-2 md:order-2 items-center">
-          {/* Dark Mode Toggle Button */}
+          {/* Toggle button for dark/light mode */}
           <Button
             className="w-10 h-10"
             color="gray"
@@ -80,6 +103,8 @@ const Header: FC = () => {
           >
             {currentTheme === "light" ? <FaSun /> : <FaMoon />}
           </Button>
+
+          {/* Display user button if signed in */}
           <SignedIn>
             <UserButton
               appearance={{
@@ -88,13 +113,19 @@ const Header: FC = () => {
               userProfileUrl="/dashboard?tab=profile"
             />
           </SignedIn>
+
+          {/* Display sign in button if signed out */}
           <SignedOut>
             <Button gradientDuoTone="purpleToBlue" outline>
               <SignInButton />
             </Button>
           </SignedOut>
+
+          {/* Toggle button for responsive Navbar collapse */}
           <Navbar.Toggle />
         </div>
+
+        {/* Navigation links for different pages */}
         <Navbar.Collapse>
           <Link href="/">
             <Navbar.Link active={path === "/"} as="div">

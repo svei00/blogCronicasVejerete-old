@@ -8,7 +8,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import "react-quill-new/dist/quill.snow.css";
-
 import {
   getDownloadURL,
   getStorage,
@@ -16,11 +15,12 @@ import {
   uploadBytesResumable,
 } from "firebase/storage";
 import { app } from "../../../../firebase";
+import Image from "next/image"; // Import Next.js Image for optimized image rendering
 
-// React Quill import with dynamic loading for SSR
+// Dynamically import ReactQuill for client-side rendering only
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
-// Define type for formData
+// Define type for formData used in the update post form
 interface FormData {
   title?: string;
   category?: string;
@@ -29,7 +29,10 @@ interface FormData {
 }
 
 const UpdatePost: React.FC = () => {
+  // Retrieve authentication state and user details from Clerk
   const { isSignedIn, user, isLoaded } = useUser();
+
+  // Local state declarations
   const [file, setFile] = useState<File | null>(null);
   const [imageUploadProgress, setImageUploadProgress] = useState<number | null>(
     null
@@ -37,48 +40,52 @@ const UpdatePost: React.FC = () => {
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({});
   const [publishError, setPublishError] = useState<string | null>(null);
+
+  // Next.js router and pathname hook for navigation and extracting post ID from the URL
   const router = useRouter();
   const pathname = usePathname();
-  const postId = pathname.split("/").pop();
+  const postId = pathname.split("/").pop(); // Extracts the post ID from the URL
 
+  // Fetch the current post data when the component mounts (or when postId or admin status changes)
   useEffect(() => {
     const fetchPost = async () => {
       try {
         const res = await fetch("/api/post/get", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ postId }),
         });
-
         const data = await res.json();
         if (res.ok) {
+          // Set the form data with the retrieved post data (using the first post from the returned array)
           setFormData(data.posts[0]);
         }
       } catch (error) {
         console.error("Error fetching post:", (error as Error).message);
       }
     };
-
     if (isSignedIn && user?.publicMetadata?.isAdmin) {
       fetchPost();
     }
   }, [postId, user?.publicMetadata?.isAdmin, isSignedIn]);
 
+  // Function to handle image upload to Firebase Storage
   const handleUploadImage = async () => {
     try {
+      // Validate that a file has been selected
       if (!file) {
         setImageUploadError("Please select an image");
         return;
       }
-
       setImageUploadError(null);
+
+      // Initialize Firebase storage and create a unique filename
       const storage = getStorage(app);
       const fileName = `${new Date().getTime()}-${file.name}`;
       const storageRef = ref(storage, fileName);
       const uploadTask = uploadBytesResumable(storageRef, file);
 
+      // Monitor the upload progress
       uploadTask.on(
         "state_changed",
         (snapshot) => {
@@ -87,13 +94,16 @@ const UpdatePost: React.FC = () => {
           setImageUploadProgress(Math.round(progress));
         },
         (error) => {
+          // Handle errors during upload
           setImageUploadError("Image upload failed");
           setImageUploadProgress(null);
         },
         async () => {
+          // On successful upload, retrieve the download URL
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           setImageUploadProgress(null);
           setImageUploadError(null);
+          // Update formData with the uploaded image URL
           setFormData((prev) => ({ ...prev, image: downloadURL }));
         }
       );
@@ -104,29 +114,27 @@ const UpdatePost: React.FC = () => {
     }
   };
 
+  // Function to handle form submission to update the post
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     try {
+      // Send the updated post data to the API along with user and post IDs
       const res = await fetch("/api/post/update", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
           userMongoId: user?.publicMetadata?.userMongoId,
           postId,
         }),
       });
-
       const data = await res.json();
       if (!res.ok) {
         setPublishError(data.message || "Failed to update post");
         return;
       }
-
       setPublishError(null);
+      // Redirect to the updated post page using the returned slug
       router.push(`/post/${data.slug}`);
     } catch (error) {
       setPublishError("Something went wrong");
@@ -134,10 +142,12 @@ const UpdatePost: React.FC = () => {
     }
   };
 
+  // While user data is loading, return nothing to prevent premature rendering
   if (!isLoaded) {
     return null;
   }
 
+  // Only allow signed-in admin users to view the update post form
   if (isSignedIn && user?.publicMetadata?.isAdmin) {
     return (
       <div className="p-3 max-w-3xl mx-auto min-h-screen">
@@ -145,6 +155,7 @@ const UpdatePost: React.FC = () => {
           Update a post
         </h1>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          {/* Title and Category inputs */}
           <div className="flex flex-col gap-4 sm:flex-row justify-between">
             <TextInput
               type="text"
@@ -170,6 +181,7 @@ const UpdatePost: React.FC = () => {
               <option value="draft">Draft</option>
             </Select>
           </div>
+          {/* File input and upload button */}
           <div className="flex gap-4 items-center justify-between border-4 border-teal-500 border-dotted p-3">
             <FileInput
               type="file"
@@ -185,6 +197,7 @@ const UpdatePost: React.FC = () => {
               disabled={!!imageUploadProgress}
             >
               {imageUploadProgress ? (
+                // Show a circular progress bar during image upload
                 <div className="w-16 h-16">
                   <CircularProgressbar
                     value={imageUploadProgress}
@@ -196,16 +209,22 @@ const UpdatePost: React.FC = () => {
               )}
             </Button>
           </div>
+          {/* Display image upload errors if any */}
           {imageUploadError && (
             <Alert color="failure">{imageUploadError}</Alert>
           )}
+          {/* Display uploaded image preview using Next.js Image */}
           {formData.image && (
-            <img
-              src={formData.image}
-              alt="upload"
-              className="w-full h-72 object-cover"
-            />
+            <div className="relative w-full h-72">
+              <Image
+                src={formData.image}
+                alt="upload"
+                fill
+                style={{ objectFit: "cover" }}
+              />
+            </div>
           )}
+          {/* Rich text editor for post content */}
           <ReactQuill
             theme="snow"
             placeholder="Write something..."
@@ -216,9 +235,11 @@ const UpdatePost: React.FC = () => {
               setFormData((prev) => ({ ...prev, content: value }))
             }
           />
-          <Button type="submit" gradientDuoTone="purpleToPink">
+          {/* Submit button to update the post */}
+          <Button type="submit" gradientDuoTone="purpleToBlue">
             Update
           </Button>
+          {/* Display publish error messages if any */}
           {publishError && (
             <Alert className="mt-5" color="failure">
               {publishError}
@@ -229,6 +250,7 @@ const UpdatePost: React.FC = () => {
     );
   }
 
+  // If the user is not authorized (not an admin), show an appropriate message
   return (
     <h1 className="text-center text-3xl my-7 font-semibold min-h-screen">
       You need to be an admin to update a post

@@ -9,6 +9,7 @@ import {
 import { Button, Table } from "flowbite-react";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
+import Image from "next/image"; // Next.js Image component for optimized image rendering
 
 // Define types for Users and Posts
 interface UserType {
@@ -25,6 +26,7 @@ interface PostType {
 }
 
 export default function DashboardComp() {
+  // Local state for storing users, posts, and statistics
   const [users, setUsers] = useState<UserType[]>([]);
   const [posts, setPosts] = useState<PostType[]>([]);
   const [totalUsers, setTotalUsers] = useState<number>(0);
@@ -32,9 +34,11 @@ export default function DashboardComp() {
   const [lastMonthUsers, setLastMonthUsers] = useState<number>(0);
   const [lastMonthPosts, setLastMonthPosts] = useState<number>(0);
 
+  // Retrieve the currently authenticated user using Clerk
   const { user } = useUser();
 
   useEffect(() => {
+    // Function to fetch recent users from the API
     const fetchUsers = async () => {
       try {
         const res = await fetch("/api/user/get", {
@@ -44,9 +48,7 @@ export default function DashboardComp() {
           },
           body: JSON.stringify({ limit: 5 }),
         });
-
         if (!res.ok) throw new Error("Failed to fetch users");
-
         const data: {
           users: UserType[];
           totalUsers: number;
@@ -60,6 +62,7 @@ export default function DashboardComp() {
       }
     };
 
+    // Function to fetch recent posts from the API
     const fetchPosts = async () => {
       try {
         const res = await fetch("/api/post/get", {
@@ -69,9 +72,7 @@ export default function DashboardComp() {
           },
           body: JSON.stringify({ limit: 5 }),
         });
-
         if (!res.ok) throw new Error("Failed to fetch posts");
-
         const data: {
           posts: PostType[];
           totalPosts: number;
@@ -85,6 +86,7 @@ export default function DashboardComp() {
       }
     };
 
+    // Only fetch data if the user is an admin
     if (user?.publicMetadata?.isAdmin) {
       fetchUsers();
       fetchPosts();
@@ -93,6 +95,7 @@ export default function DashboardComp() {
 
   return (
     <div className="p-3 md:mx-auto">
+      {/* Statistics Cards */}
       <div className="flex-wrap flex gap-4 justify-center">
         {/* Total Users Card */}
         <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
@@ -111,7 +114,6 @@ export default function DashboardComp() {
             <div className="text-gray-500">Last month</div>
           </div>
         </div>
-
         {/* Total Posts Card */}
         <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
           <div className="flex justify-between">
@@ -130,10 +132,9 @@ export default function DashboardComp() {
           </div>
         </div>
       </div>
-
       {/* Recent Users & Posts Tables */}
       <div className="flex flex-wrap gap-4 py-3 mx-auto justify-center">
-        {/* Recent Users */}
+        {/* Recent Users Table */}
         <div className="flex flex-col w-full md:w-auto shadow-md p-2 rounded-md dark:bg-gray-800">
           <div className="flex justify-between p-3 text-sm font-semibold">
             <h1 className="text-center p-2">Recent users</h1>
@@ -153,10 +154,13 @@ export default function DashboardComp() {
                   className="bg-white dark:border-gray-700 dark:bg-gray-800"
                 >
                   <Table.Cell>
-                    <img
+                    {/* Next.js Image component replaces the standard <img> tag for better performance */}
+                    <Image
                       src={user.profilePicture}
                       alt="user"
-                      className="w-10 h-10 rounded-full bg-gray-500"
+                      width={40} // 40 pixels width
+                      height={40} // 40 pixels height
+                      className="rounded-full bg-gray-500"
                     />
                   </Table.Cell>
                   <Table.Cell>{user.username}</Table.Cell>
@@ -165,8 +169,7 @@ export default function DashboardComp() {
             </Table.Body>
           </Table>
         </div>
-
-        {/* Recent Posts */}
+        {/* Recent Posts Table */}
         <div className="flex flex-col w-full md:w-auto shadow-md p-2 rounded-md dark:bg-gray-800">
           <div className="flex justify-between p-3 text-sm font-semibold">
             <h1 className="text-center p-2">Recent posts</h1>
@@ -187,10 +190,13 @@ export default function DashboardComp() {
                   className="bg-white dark:border-gray-700 dark:bg-gray-800"
                 >
                   <Table.Cell>
-                    <img
+                    {/* Replace <img> with Next.js <Image> for the post image */}
+                    <Image
                       src={post.image}
                       alt="post"
-                      className="w-14 h-10 rounded-md bg-gray-500"
+                      width={56} // 56 pixels width (approx. for "w-14")
+                      height={40} // 40 pixels height
+                      className="rounded-md bg-gray-500"
                     />
                   </Table.Cell>
                   <Table.Cell className="w-96">{post.title}</Table.Cell>
