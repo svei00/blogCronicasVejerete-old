@@ -15,10 +15,11 @@ interface SideBarData {
   category: string;
 }
 
-// Define the shape of a Post object; additional properties are allowed
+// Define the shape of a Post object; additional properties are allowed.
+// Using 'unknown' instead of 'any' for extra properties increases type safety.
 interface Post {
   id: string; // Mandatory field
-  [key: string]: any; // Allow extra properties without explicitly typing them
+  [key: string]: unknown; // Allow extra properties without explicitly typing them
 }
 
 // Main Search component
@@ -39,7 +40,7 @@ export default function Search() {
   // State to control whether the "Show More" button should be displayed
   const [showMore, setShowMore] = useState<boolean>(false);
 
-  // Retrieve URL search parameters from the router and Next.js router instance for navigation
+  // Retrieve URL search parameters and the router instance for navigation
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -96,6 +97,7 @@ export default function Search() {
         setLoading(false);
       }
     };
+
     // Call the fetchPosts function.
     fetchPosts();
   }, [searchParams]);

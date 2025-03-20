@@ -2,39 +2,45 @@ import Link from "next/link";
 import CallToAction from "./components/CallToAction";
 import RecentPost from "./components/RecentPosts";
 
+// Define a type for post data (using an index signature to allow additional properties)
+interface PostData {
+  [key: string]: unknown;
+}
+
 // The Home page is declared as an async function to fetch data before rendering
 export default async function Home(): Promise<JSX.Element> {
-  // Initialize a variable to hold the posts; defaulting to null
-  let posts: any = null;
+  // Initialize a variable to hold the posts; defaulting to null.
+  // Note: 'posts' is currently not used in the rendered output, but is preserved for potential future use.
+  let posts: PostData[] | null = null;
 
   try {
-    // Send a POST request to the API endpoint to fetch posts
+    // Send a POST request to the API endpoint to fetch posts.
     const result = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/post/get`, {
-      method: "POST", // Using POST method as per API design
+      method: "POST", // Using POST method as per API design.
       headers: {
-        "Content-Type": "application/json", // Specify that the request body is JSON
+        "Content-Type": "application/json", // Specify that the request body is JSON.
       },
-      // Request body includes parameters to limit the posts and set the order to descending
+      // Request body includes parameters to limit the posts and set the order to descending.
       body: JSON.stringify({ limit: 9, order: "desc" }),
-      // 'no-store' ensures that the data is always fetched fresh and not cached
+      // 'no-store' ensures that the data is always fetched fresh and not cached.
       cache: "no-store",
     });
 
-    // If the response status is not OK, throw an error with the status text
+    // If the response status is not OK, throw an error with the status text.
     if (!result.ok) {
       throw new Error(`Failed to fetch posts: ${result.statusText}`);
     }
 
-    // Parse the JSON response from the API
+    // Parse the JSON response from the API.
     const data = await result.json();
-    // Extract posts from the response data
+    // Extract posts from the response data.
     posts = data.posts;
   } catch (error) {
-    // Log any error that occurs during the fetch operation
+    // Log any error that occurs during the fetch operation.
     console.error("Error getting posts:", error);
   }
 
-  // Return the JSX layout for the Home page
+  // Return the JSX layout for the Home page.
   return (
     <div className="flex flex-col justify-center items-center">
       {/* Main content section with a header, description, and a link to view all posts */}

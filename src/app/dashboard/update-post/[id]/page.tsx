@@ -15,12 +15,12 @@ import {
   uploadBytesResumable,
 } from "firebase/storage";
 import { app } from "../../../../firebase";
-import Image from "next/image"; // Import Next.js Image for optimized image rendering
+import Image from "next/image"; // Next.js Image for optimized image rendering
 
-// Dynamically import ReactQuill for client-side rendering only
+// Dynamically import ReactQuill so it loads only on the client side
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
-// Define type for formData used in the update post form
+// Define the shape of formData used in the update post form
 interface FormData {
   title?: string;
   category?: string;
@@ -41,15 +41,16 @@ const UpdatePost: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({});
   const [publishError, setPublishError] = useState<string | null>(null);
 
-  // Next.js router and pathname hook for navigation and extracting post ID from the URL
+  // Get Next.js router and pathname hook for navigation and extracting the post ID from the URL
   const router = useRouter();
   const pathname = usePathname();
-  const postId = pathname.split("/").pop(); // Extracts the post ID from the URL
+  const postId = pathname.split("/").pop(); // Extract the post ID from the URL
 
-  // Fetch the current post data when the component mounts (or when postId or admin status changes)
+  // Fetch the current post data when the component mounts or when postId/admin status changes
   useEffect(() => {
     const fetchPost = async () => {
       try {
+        // Send a POST request to retrieve the post details by postId
         const res = await fetch("/api/post/get", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -57,7 +58,7 @@ const UpdatePost: React.FC = () => {
         });
         const data = await res.json();
         if (res.ok) {
-          // Set the form data with the retrieved post data (using the first post from the returned array)
+          // Set formData with the fetched post data (using the first post from the returned array)
           setFormData(data.posts[0]);
         }
       } catch (error) {
@@ -72,29 +73,30 @@ const UpdatePost: React.FC = () => {
   // Function to handle image upload to Firebase Storage
   const handleUploadImage = async () => {
     try {
-      // Validate that a file has been selected
+      // Ensure a file has been selected; if not, set an error message and exit
       if (!file) {
         setImageUploadError("Please select an image");
         return;
       }
       setImageUploadError(null);
 
-      // Initialize Firebase storage and create a unique filename
+      // Initialize Firebase storage and create a unique filename using the current timestamp
       const storage = getStorage(app);
       const fileName = `${new Date().getTime()}-${file.name}`;
       const storageRef = ref(storage, fileName);
       const uploadTask = uploadBytesResumable(storageRef, file);
 
-      // Monitor the upload progress
+      // Monitor the upload progress, update the state, and handle errors/completion
       uploadTask.on(
         "state_changed",
         (snapshot) => {
+          // Calculate the upload progress as a percentage
           const progress =
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           setImageUploadProgress(Math.round(progress));
         },
         (error) => {
-          // Handle errors during upload
+          // On error, set an error message and reset progress
           setImageUploadError("Image upload failed");
           setImageUploadProgress(null);
         },
@@ -103,7 +105,7 @@ const UpdatePost: React.FC = () => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           setImageUploadProgress(null);
           setImageUploadError(null);
-          // Update formData with the uploaded image URL
+          // Update formData with the retrieved image URL
           setFormData((prev) => ({ ...prev, image: downloadURL }));
         }
       );
@@ -114,11 +116,11 @@ const UpdatePost: React.FC = () => {
     }
   };
 
-  // Function to handle form submission to update the post
+  // Function to handle form submission for updating the post
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent the default form submission behavior
     try {
-      // Send the updated post data to the API along with user and post IDs
+      // Send the updated post data to the API, including user and post IDs
       const res = await fetch("/api/post/update", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -134,15 +136,16 @@ const UpdatePost: React.FC = () => {
         return;
       }
       setPublishError(null);
-      // Redirect to the updated post page using the returned slug
+      // On success, redirect to the updated post's page using the returned slug
       router.push(`/post/${data.slug}`);
     } catch (error) {
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       setPublishError("Something went wrong");
       console.error("Error updating post:", (error as Error).message);
     }
   };
 
-  // While user data is loading, return nothing to prevent premature rendering
+  // Prevent rendering until user data is loaded
   if (!isLoaded) {
     return null;
   }
@@ -197,7 +200,7 @@ const UpdatePost: React.FC = () => {
               disabled={!!imageUploadProgress}
             >
               {imageUploadProgress ? (
-                // Show a circular progress bar during image upload
+                // Display a circular progress bar during image upload
                 <div className="w-16 h-16">
                   <CircularProgressbar
                     value={imageUploadProgress}
@@ -209,11 +212,11 @@ const UpdatePost: React.FC = () => {
               )}
             </Button>
           </div>
-          {/* Display image upload errors if any */}
+          {/* Display image upload error if any */}
           {imageUploadError && (
             <Alert color="failure">{imageUploadError}</Alert>
           )}
-          {/* Display uploaded image preview using Next.js Image */}
+          {/* If an image URL exists in formData, show a preview using Next.js Image */}
           {formData.image && (
             <div className="relative w-full h-72">
               <Image
@@ -250,7 +253,7 @@ const UpdatePost: React.FC = () => {
     );
   }
 
-  // If the user is not authorized (not an admin), show an appropriate message
+  // If the user is not an admin, display an unauthorized message
   return (
     <h1 className="text-center text-3xl my-7 font-semibold min-h-screen">
       You need to be an admin to update a post

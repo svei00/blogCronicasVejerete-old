@@ -4,26 +4,26 @@ import { currentUser } from "@clerk/nextjs/server";
 
 // POST endpoint to create a new post
 export async function POST(req: Request) {
-  // Retrieve the current authenticated user from Clerk
+  // Retrieve the currently authenticated user using Clerk
   const user = await currentUser();
   let data;
 
-  // Try to parse the JSON body from the request
+  // Attempt to parse the JSON body from the incoming request.
+  // If parsing fails, return a 400 Bad Request response.
   try {
     data = await req.json();
-  } catch (_err) {
-    // If parsing fails, return a 400 Bad Request response
+  } catch {
     return new Response("Invalid request body", { status: 400 });
   }
 
   try {
-    // Connect to the MongoDB database
+    // Establish a connection to the MongoDB database.
     await connect();
 
-    // Check if the user is authorized:
-    // 1. The user must exist.
-    // 2. The user's Mongo ID from public metadata must match the one in the request body.
-    // 3. The user must be an admin.
+    // Validate user authorization:
+    // - The user must exist.
+    // - The user's Mongo ID from public metadata must match the one provided in the request body.
+    // - The user must be an admin.
     if (
       !user ||
       user.publicMetadata.userMongoId !== data.userMongoId ||
@@ -32,11 +32,11 @@ export async function POST(req: Request) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    // Generate a URL-friendly slug from the post title:
-    // - Trim whitespace
-    // - Replace spaces with hyphens
-    // - Convert to lower-case
-    // - Remove characters that are not alphanumeric or hyphens
+    // Generate a URL-friendly slug from the post title by:
+    // - Trimming whitespace,
+    // - Replacing spaces with hyphens,
+    // - Converting to lower-case, and
+    // - Removing any characters that are not alphanumeric or hyphens.
     const slug = data.title
       .trim()
       .split(" ")
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       .toLowerCase()
       .replace(/[^a-z0-9-]/g, "");
 
-    // Create a new Post document with the provided data
+    // Create a new Post document using the provided data and the generated slug.
     const newPost = new Post({
       userId: user.publicMetadata.userMongoId,
       content: data.content,
@@ -54,19 +54,16 @@ export async function POST(req: Request) {
       slug,
     });
 
-    // Save the new post to the database
+    // Save the new post to the database.
     await newPost.save();
 
-    // Return a successful response with the generated slug
+    // Return a successful response (HTTP 200) with the generated slug in the JSON payload.
     return new Response(
-      JSON.stringify({ 
-        ok: true, 
-        slug: newPost.slug 
-      }),
+      JSON.stringify({ ok: true, slug: newPost.slug }),
       { status: 200 }
     );
   } catch (error) {
-    // Log any error encountered during post creation and return a 500 Internal Server Error response
+    // If any error occurs during the process, log it and return a 500 Internal Server Error response.
     console.error("Error Creating the Post:", error);
     return new Response("Error Creating the Post", { status: 500 });
   }
