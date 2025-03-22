@@ -1,32 +1,31 @@
+import React from "react"; // Import React to ensure JSX types are available
 import PostCard from "./PostCard";
 
-// Define the props expected by the RecentPosts component
+// Define the props expected by the RecentPosts component.
 interface RecentPostsProps {
-  limit: number; // Number of posts to fetch
+  limit: number; // The number of posts to fetch.
 }
 
-// The RecentPosts component is declared as an async function.
-// It fetches recent posts from the API using the provided limit,
-// then renders them using the PostCard component.
+// Async component that fetches recent posts from the API and renders them.
+// The return type is annotated as Promise<React.ReactElement> to avoid issues with the JSX namespace.
 export default async function RecentPosts({
   limit,
-}: RecentPostsProps): Promise<JSX.Element> {
+}: RecentPostsProps): Promise<React.ReactElement> {
   // Initialize a variable to hold the fetched posts; default is null.
   let posts: any = null;
 
   try {
     // Send a POST request to the API endpoint to fetch posts.
-    // The request sends JSON data with the desired limit and order ("desc" for descending).
+    // The request sends JSON data specifying the desired limit and descending order.
     const result = await fetch(process.env.NEXT_PUBLIC_URL + "/api/post/get", {
       method: "POST",
       body: JSON.stringify({ limit: limit, order: "desc" }),
-      cache: "no-store", // 'no-store' ensures fresh data is fetched without caching.
+      cache: "no-store", // 'no-store' ensures that fresh data is fetched on every request.
     });
 
     // Parse the JSON response from the API.
     const data = await result.json();
-
-    // Extract posts from the response data.
+    // Extract the posts from the response data.
     posts = data.posts;
   } catch (error) {
     // Log any error that occurs during the fetch operation.
