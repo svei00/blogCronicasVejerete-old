@@ -10,7 +10,7 @@ import DashboardComp from "../components/DashboardComp";
 
 export default function Dashboard() {
   const searchParams = useSearchParams();
-  const [tab, setTab] = useState([]);
+  const [tab, setTab] = useState<string>("");
 
   useEffect(() => {
     const urlParams = new URLSearchParams(searchParams);
