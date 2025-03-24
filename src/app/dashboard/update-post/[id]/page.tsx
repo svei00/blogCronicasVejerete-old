@@ -232,7 +232,6 @@ const UpdatePost: React.FC = () => {
             theme="snow"
             placeholder="Write something..."
             className="h-72 mb-12"
-            required
             value={formData.content}
             onChange={(value) =>
               setFormData((prev) => ({ ...prev, content: value }))

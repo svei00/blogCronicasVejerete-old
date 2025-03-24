@@ -1,3 +1,4 @@
+import React from "react"; // Import React to ensure JSX types are available
 import Link from "next/link";
 import CallToAction from "./components/CallToAction";
 import RecentPost from "./components/RecentPosts";
@@ -7,8 +8,9 @@ interface PostData {
   [key: string]: unknown;
 }
 
-// The Home page is declared as an async function to fetch data before rendering
-export default async function Home(): Promise<JSX.Element> {
+// The Home page is declared as an async function to fetch data before rendering.
+// We annotate the return type as Promise<React.ReactElement> to avoid namespace errors.
+export default async function Home(): Promise<React.ReactElement> {
   // Initialize a variable to hold the posts; defaulting to null.
   // Note: 'posts' is currently not used in the rendered output, but is preserved for potential future use.
   let posts: PostData[] | null = null;
@@ -47,7 +49,7 @@ export default async function Home(): Promise<JSX.Element> {
       <div className="flex flex-col gap-6 p-28 px-3 max-w-6xl mx-auto">
         <h1 className="text-3xl text-purple-500 font-bold lg:text-6xl">
           Bienvenidos al Blog de Cro{"\u0301"}nicas del Vejerete{" "}
-          {/* The Unicode sequence \u0301 adds an accent mark; you can also use &oacute; */}
+          {/* The Unicode sequence \u0301 adds an accent mark; you can also use &oacute; as an alternative */}
         </h1>
         <p className="text-gray-500 text-sm sm:text-base">
           Blog sobre diferentes temas desde un punto de vista personal
