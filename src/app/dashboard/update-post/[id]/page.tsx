@@ -20,7 +20,7 @@ import Image from "next/image"; // Next.js Image for optimized image rendering
 // Dynamically import ReactQuill so it loads only on the client side
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
-// Define the shape of formData used in the update post form
+// Define type for formData used in the update post form
 interface FormData {
   title?: string;
   category?: string;
@@ -32,7 +32,7 @@ const UpdatePost: React.FC = () => {
   // Retrieve authentication state and user details from Clerk
   const { isSignedIn, user, isLoaded } = useUser();
 
-  // Local state declarations
+  // Local state declarations for file selection, upload progress, errors, form data, etc.
   const [file, setFile] = useState<File | null>(null);
   const [imageUploadProgress, setImageUploadProgress] = useState<number | null>(
     null
@@ -41,12 +41,12 @@ const UpdatePost: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({});
   const [publishError, setPublishError] = useState<string | null>(null);
 
-  // Get Next.js router and pathname hook for navigation and extracting the post ID from the URL
+  // Next.js router and pathname hook for navigation and extracting post ID from the URL
   const router = useRouter();
   const pathname = usePathname();
-  const postId = pathname.split("/").pop(); // Extract the post ID from the URL
+  const postId = pathname.split("/").pop(); // Extracts the post ID from the URL
 
-  // Fetch the current post data when the component mounts or when postId/admin status changes
+  // Fetch the current post data when the component mounts (or when postId/admin status changes)
   useEffect(() => {
     const fetchPost = async () => {
       try {
@@ -73,7 +73,7 @@ const UpdatePost: React.FC = () => {
   // Function to handle image upload to Firebase Storage
   const handleUploadImage = async () => {
     try {
-      // Ensure a file has been selected; if not, set an error message and exit
+      // Validate that a file has been selected; if not, set an error message and exit
       if (!file) {
         setImageUploadError("Please select an image");
         return;
@@ -90,7 +90,7 @@ const UpdatePost: React.FC = () => {
       uploadTask.on(
         "state_changed",
         (snapshot) => {
-          // Calculate the upload progress as a percentage
+          // Calculate upload progress as a percentage
           const progress =
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           setImageUploadProgress(Math.round(progress));
@@ -118,7 +118,7 @@ const UpdatePost: React.FC = () => {
 
   // Function to handle form submission for updating the post
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Prevent the default form submission behavior
+    e.preventDefault(); // Prevent default form submission behavior
     try {
       // Send the updated post data to the API, including user and post IDs
       const res = await fetch("/api/post/update", {
@@ -187,7 +187,7 @@ const UpdatePost: React.FC = () => {
           {/* File input and upload button */}
           <div className="flex gap-4 items-center justify-between border-4 border-teal-500 border-dotted p-3">
             <FileInput
-              type="file"
+              // Removed the type="file" property as FileInput already defaults to file input
               accept="image/*"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
