@@ -15,11 +15,15 @@ interface SideBarData {
   category: string;
 }
 
-// Define the shape of a Post object; additional properties are allowed.
-// Using 'unknown' instead of 'any' for extra properties increases type safety.
+// Define the shape of a Post object.
+// We include the properties that PostCard requires: slug, image, title, category.
 interface Post {
-  id: string; // Mandatory field
-  [key: string]: unknown; // Allow extra properties without explicitly typing them
+  id: string;      // Mandatory identifier
+  slug: string;    // URL-friendly identifier for the post
+  image: string;   // URL of the post image
+  title: string;   // Post title
+  category: string;// Post category
+  [key: string]: unknown; // Allow additional properties if needed
 }
 
 // Main Search component
