@@ -6,13 +6,25 @@ interface RecentPostsProps {
   limit: number; // The number of posts to fetch.
 }
 
+// Define an interface for the post data.
+// This includes the properties that PostCard is expected to use.
+// You can expand this interface if you have additional properties.
+interface PostData {
+  _id: string;
+  slug: string;
+  image: string;
+  title: string;
+  category: string;
+  [key: string]: unknown; // Allow additional properties if needed
+}
+
 // Async component that fetches recent posts from the API and renders them.
 // The return type is annotated as Promise<React.ReactElement> to avoid issues with the JSX namespace.
 export default async function RecentPosts({
   limit,
 }: RecentPostsProps): Promise<React.ReactElement> {
   // Initialize a variable to hold the fetched posts; default is null.
-  let posts: any = null;
+  let posts: PostData[] | null = null;
 
   try {
     // Send a POST request to the API endpoint to fetch posts.
@@ -41,7 +53,9 @@ export default async function RecentPosts({
       <div className="flex flex-wrap gap-5 mt-5 justify-center">
         {/* If posts exist, map each post to a PostCard component */}
         {posts &&
-          posts.map((post: any) => <PostCard key={post._id} post={post} />)}
+          posts.map((post: PostData) => (
+            <PostCard key={post._id} post={post} />
+          ))}
       </div>
     </div>
   );

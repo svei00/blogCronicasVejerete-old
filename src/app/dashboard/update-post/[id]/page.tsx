@@ -17,10 +17,10 @@ import {
 import { app } from "../../../../firebase";
 import Image from "next/image"; // Next.js Image for optimized image rendering
 
-// Dynamically import ReactQuill so it loads only on the client side
+// Dynamically import ReactQuill so it loads only on the client side.
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
-// Define type for formData used in the update post form
+// Define type for formData used in the update post form.
 interface FormData {
   title?: string;
   category?: string;
@@ -29,7 +29,7 @@ interface FormData {
 }
 
 const UpdatePost: React.FC = () => {
-  // Retrieve authentication state and user details from Clerk
+  // Retrieve authentication state and user details from Clerk.
   const { isSignedIn, user, isLoaded } = useUser();
 
   // Local state declarations for file selection, upload progress, errors, form data, etc.
@@ -41,16 +41,16 @@ const UpdatePost: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({});
   const [publishError, setPublishError] = useState<string | null>(null);
 
-  // Next.js router and pathname hook for navigation and extracting post ID from the URL
+  // Next.js router and pathname hook for navigation and extracting post ID from the URL.
   const router = useRouter();
   const pathname = usePathname();
-  const postId = pathname.split("/").pop(); // Extracts the post ID from the URL
+  const postId = pathname.split("/").pop(); // Extracts the post ID from the URL.
 
-  // Fetch the current post data when the component mounts (or when postId/admin status changes)
+  // Fetch the current post data when the component mounts (or when postId/admin status changes).
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        // Send a POST request to retrieve the post details by postId
+        // Send a POST request to retrieve the post details by postId.
         const res = await fetch("/api/post/get", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -58,7 +58,7 @@ const UpdatePost: React.FC = () => {
         });
         const data = await res.json();
         if (res.ok) {
-          // Set formData with the fetched post data (using the first post from the returned array)
+          // Set formData with the fetched post data (using the first post from the returned array).
           setFormData(data.posts[0]);
         }
       } catch (error) {
@@ -70,42 +70,42 @@ const UpdatePost: React.FC = () => {
     }
   }, [postId, user?.publicMetadata?.isAdmin, isSignedIn]);
 
-  // Function to handle image upload to Firebase Storage
+  // Function to handle image upload to Firebase Storage.
   const handleUploadImage = async () => {
     try {
-      // Validate that a file has been selected; if not, set an error message and exit
+      // Validate that a file has been selected; if not, set an error message and exit.
       if (!file) {
         setImageUploadError("Please select an image");
         return;
       }
       setImageUploadError(null);
 
-      // Initialize Firebase storage and create a unique filename using the current timestamp
+      // Initialize Firebase storage and create a unique filename using the current timestamp.
       const storage = getStorage(app);
       const fileName = `${new Date().getTime()}-${file.name}`;
       const storageRef = ref(storage, fileName);
       const uploadTask = uploadBytesResumable(storageRef, file);
 
-      // Monitor the upload progress, update the state, and handle errors/completion
+      // Monitor the upload progress, update the state, and handle errors/completion.
       uploadTask.on(
         "state_changed",
         (snapshot) => {
-          // Calculate upload progress as a percentage
+          // Calculate upload progress as a percentage.
           const progress =
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           setImageUploadProgress(Math.round(progress));
         },
         (error) => {
-          // On error, set an error message and reset progress
+          // On error, set an error message and reset progress.
           setImageUploadError("Image upload failed");
           setImageUploadProgress(null);
         },
         async () => {
-          // On successful upload, retrieve the download URL
+          // On successful upload, retrieve the download URL.
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           setImageUploadProgress(null);
           setImageUploadError(null);
-          // Update formData with the retrieved image URL
+          // Update formData with the retrieved image URL.
           setFormData((prev) => ({ ...prev, image: downloadURL }));
         }
       );
@@ -116,11 +116,11 @@ const UpdatePost: React.FC = () => {
     }
   };
 
-  // Function to handle form submission for updating the post
+  // Function to handle form submission for updating the post.
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Prevent default form submission behavior
+    e.preventDefault(); // Prevent default form submission behavior.
     try {
-      // Send the updated post data to the API, including user and post IDs
+      // Send the updated post data to the API, including user and post IDs.
       const res = await fetch("/api/post/update", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -136,21 +136,20 @@ const UpdatePost: React.FC = () => {
         return;
       }
       setPublishError(null);
-      // On success, redirect to the updated post's page using the returned slug
+      // On success, redirect to the updated post's page using the returned slug.
       router.push(`/post/${data.slug}`);
     } catch (error) {
-      // eslint-disable-line @typescript-eslint/no-unused-vars
       setPublishError("Something went wrong");
       console.error("Error updating post:", (error as Error).message);
     }
   };
 
-  // Prevent rendering until user data is loaded
+  // Prevent rendering until user data is loaded.
   if (!isLoaded) {
     return null;
   }
 
-  // Only allow signed-in admin users to view the update post form
+  // Only allow signed-in admin users to view the update post form.
   if (isSignedIn && user?.publicMetadata?.isAdmin) {
     return (
       <div className="p-3 max-w-3xl mx-auto min-h-screen">
@@ -187,7 +186,7 @@ const UpdatePost: React.FC = () => {
           {/* File input and upload button */}
           <div className="flex gap-4 items-center justify-between border-4 border-teal-500 border-dotted p-3">
             <FileInput
-              // Removed the type="file" property as FileInput already defaults to file input
+              // Removed the type="file" property as FileInput already defaults to file input.
               accept="image/*"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
@@ -200,7 +199,7 @@ const UpdatePost: React.FC = () => {
               disabled={!!imageUploadProgress}
             >
               {imageUploadProgress ? (
-                // Display a circular progress bar during image upload
+                // Display a circular progress bar during image upload.
                 <div className="w-16 h-16">
                   <CircularProgressbar
                     value={imageUploadProgress}
@@ -252,7 +251,7 @@ const UpdatePost: React.FC = () => {
     );
   }
 
-  // If the user is not an admin, display an unauthorized message
+  // If the user is not an admin, display an unauthorized message.
   return (
     <h1 className="text-center text-3xl my-7 font-semibold min-h-screen">
       You need to be an admin to update a post
