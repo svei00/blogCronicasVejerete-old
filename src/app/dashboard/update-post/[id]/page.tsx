@@ -138,9 +138,10 @@ const UpdatePost: React.FC = () => {
       setPublishError(null);
       // On success, redirect to the updated post's page using the returned slug.
       router.push(`/post/${data.slug}`);
-    } catch (error) {
+    } catch (_err) {
+      // Using _err as the error parameter to indicate it's intentionally unused.
       setPublishError("Something went wrong");
-      console.error("Error updating post:", (error as Error).message);
+      console.error("Error updating post:", (_err as Error).message);
     }
   };
 
