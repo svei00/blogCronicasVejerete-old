@@ -11,10 +11,10 @@ interface PostData {
 // The Home page is declared as an async function to fetch data before rendering.
 // We annotate the return type as Promise<React.ReactElement> to avoid namespace errors.
 export default async function Home(): Promise<React.ReactElement> {
-  // (Optional) We previously fetched posts here, but since 'posts' is not used in the UI,
-  // the variable is removed to avoid the unused variable error.
+  // Since 'posts' is not used in the rendered output, we remove its declaration to avoid the unused variable error.
   try {
     // Send a POST request to the API endpoint to fetch posts.
+    // (The result is not used in the UI, but could be used in future.)
     await fetch(`${process.env.NEXT_PUBLIC_URL}/api/post/get`, {
       method: "POST", // Using POST method as per API design.
       headers: {
