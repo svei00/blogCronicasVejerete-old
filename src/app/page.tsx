@@ -3,7 +3,9 @@ import Link from "next/link";
 import CallToAction from "./components/CallToAction";
 import RecentPost from "./components/RecentPosts";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 // Define a type for post data (using an index signature to allow additional properties)
+// This interface is preserved for potential future use.
 interface PostData {
   [key: string]: unknown;
 }
@@ -11,11 +13,13 @@ interface PostData {
 // The Home page is declared as an async function to fetch data before rendering.
 // We annotate the return type as Promise<React.ReactElement> to avoid namespace errors.
 export default async function Home(): Promise<React.ReactElement> {
-  // Since 'posts' is not used in the rendered output, we remove its declaration to avoid the unused variable error.
+  // Initialize a variable to hold the posts; defaulting to null.
+  // Note: 'posts' is currently not used in the rendered output, but is preserved for potential future use.
+  let posts: PostData[] | null = null;
+
   try {
     // Send a POST request to the API endpoint to fetch posts.
-    // (The result is not used in the UI, but could be used in future.)
-    await fetch(`${process.env.NEXT_PUBLIC_URL}/api/post/get`, {
+    const result = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/post/get`, {
       method: "POST", // Using POST method as per API design.
       headers: {
         "Content-Type": "application/json", // Specify that the request body is JSON.
@@ -25,6 +29,16 @@ export default async function Home(): Promise<React.ReactElement> {
       // 'no-store' ensures that the data is always fetched fresh and not cached.
       cache: "no-store",
     });
+
+    // If the response status is not OK, throw an error with the status text.
+    if (!result.ok) {
+      throw new Error(`Failed to fetch posts: ${result.statusText}`);
+    }
+
+    // Parse the JSON response from the API.
+    const data = await result.json();
+    // Extract posts from the response data.
+    posts = data.posts;
   } catch (error) {
     // Log any error that occurs during the fetch operation.
     console.error("Error getting posts:", error);

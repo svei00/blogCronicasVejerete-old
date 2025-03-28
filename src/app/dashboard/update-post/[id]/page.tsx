@@ -141,7 +141,7 @@ const UpdatePost: React.FC = () => {
     } catch (_error) {
       // Renamed error to _error to indicate it's intentionally unused.
       setPublishError("Something went wrong");
-      console.error("Error updating post:", (_error as Error).message);
+      console.error("Error updating post:", (error as Error).message); // Ensure error is used here
     }
   };
 
