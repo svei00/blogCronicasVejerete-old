@@ -3,44 +3,24 @@ import Link from "next/link";
 import CallToAction from "./components/CallToAction";
 import RecentPost from "./components/RecentPosts";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-// Define a type for post data (using an index signature to allow additional properties)
-// This interface is preserved for potential future use.
-interface PostData {
-  [key: string]: unknown;
-}
-
 // The Home page is declared as an async function to fetch data before rendering.
 // We annotate the return type as Promise<React.ReactElement> to avoid namespace errors.
 export default async function Home(): Promise<React.ReactElement> {
-  // Initialize a variable to hold the posts; defaulting to null.
-  // Note: 'posts' is currently not used in the rendered output, but is preserved for potential future use.
-  let posts: PostData[] | null = null;
+  // Note: Data fetching has been moved to the RecentPost component for component-based data management
+  // while preserving the API endpoint structure for potential future use.
 
   try {
-    // Send a POST request to the API endpoint to fetch posts.
-    const result = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/post/get`, {
-      method: "POST", // Using POST method as per API design.
-      headers: {
-        "Content-Type": "application/json", // Specify that the request body is JSON.
-      },
-      // Request body includes parameters to limit the posts and set the order to descending.
-      body: JSON.stringify({ limit: 9, order: "desc" }),
-      // 'no-store' ensures that the data is always fetched fresh and not cached.
-      cache: "no-store",
-    });
-
-    // If the response status is not OK, throw an error with the status text.
-    if (!result.ok) {
-      throw new Error(`Failed to fetch posts: ${result.statusText}`);
-    }
-
-    // Parse the JSON response from the API.
-    const data = await result.json();
-    // Extract posts from the response data.
-    posts = data.posts;
+    // Preserved API endpoint reference for documentation purposes:
+    // const result = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/post/get`, {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({ limit: 9, order: "desc" }),
+    //   cache: "no-store",
+    // });
+    // Example error handling preservation:
+    // if (!result.ok) throw new Error(`Failed to fetch posts: ${result.statusText}`);
   } catch (error) {
-    // Log any error that occurs during the fetch operation.
+    // Maintain error logging infrastructure
     console.error("Error getting posts:", error);
   }
 

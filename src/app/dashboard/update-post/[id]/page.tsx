@@ -15,7 +15,7 @@ import {
   uploadBytesResumable,
 } from "firebase/storage";
 import { app } from "../../../../firebase";
-import Image from "next/image"; // Next.js Image for optimized image rendering
+import Image from "next/image";
 
 // Dynamically import ReactQuill so it loads only on the client side.
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
@@ -61,8 +61,9 @@ const UpdatePost: React.FC = () => {
           // Set formData with the fetched post data (using the first post from the returned array).
           setFormData(data.posts[0]);
         }
-      } catch (error) {
-        console.error("Error fetching post:", (error as Error).message);
+      } catch (_error) {
+        const error = _error as Error;
+        console.error("Error fetching post:", error.message);
       }
     };
     if (isSignedIn && user?.publicMetadata?.isAdmin) {
@@ -95,10 +96,12 @@ const UpdatePost: React.FC = () => {
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           setImageUploadProgress(Math.round(progress));
         },
-        (error) => {
+        (_error) => {
+          const error = _error as Error;
           // On error, set an error message and reset progress.
           setImageUploadError("Image upload failed");
           setImageUploadProgress(null);
+          console.error("Upload error:", error.message);
         },
         async () => {
           // On successful upload, retrieve the download URL.
@@ -109,10 +112,11 @@ const UpdatePost: React.FC = () => {
           setFormData((prev) => ({ ...prev, image: downloadURL }));
         }
       );
-    } catch (error) {
+    } catch (_error) {
+      const error = _error as Error;
       setImageUploadError("Image upload failed");
       setImageUploadProgress(null);
-      console.error("Error uploading image:", (error as Error).message);
+      console.error("Error uploading image:", error.message);
     }
   };
 
@@ -139,9 +143,9 @@ const UpdatePost: React.FC = () => {
       // On success, redirect to the updated post's page using the returned slug.
       router.push(`/post/${data.slug}`);
     } catch (_error) {
-      // Renamed error to _error to indicate it's intentionally unused.
-      setPublishError("Something went wrong");
-      console.error("Error updating post:", (error as Error).message); // Ensure error is used here
+      const error = _error as Error;
+      setPublishError(`Something went wrong: ${error.message}`);
+      console.error("Error updating post:", error.message);
     }
   };
 
@@ -187,7 +191,6 @@ const UpdatePost: React.FC = () => {
           {/* File input and upload button */}
           <div className="flex gap-4 items-center justify-between border-4 border-teal-500 border-dotted p-3">
             <FileInput
-              // Removed the type="file" property as FileInput already defaults to file input.
               accept="image/*"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
