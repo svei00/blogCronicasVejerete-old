@@ -3372,6 +3372,13 @@ jobs:
 ## Notes
 * Whith this line // eslint-disable-next-line @typescript-eslint/ban-ts-comment you can ommit Eslint validations.
 * Using React Quill New on NextJS app https://dev.to/a7u/react-quill-with-nextjs-478b
+* sudo chown -R youruser:youruser /var/www/your_page/ changes the ownership
+* sudo nginx -t && sudo systemctl restart nginx to restart and check status of nginx server.
+* To check the CPU usage: `top` or `htop` if not **htop** installed do:
+  - For AlmaLinux: `sudo dnf install htop`
+* To check the 10 processes with the highest CPU usage: `ps aux --sort=-%cpu | head -10`
+* If having issues with the build with `npm run build` install `npm install --save-dev webpack @types/webpack`
+* Use `export const revalidate = 60; // or 300, 3600, 86400 depending on your desired interval` to change the update time of the page. It is important.
 
 ## Bibliography
 1. Main Tutorial [Code With Sahand](https://www.youtube.com/watch?v=Zw8Wl1W0LW0&t=9s) 
