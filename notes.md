@@ -3383,3 +3383,37 @@ jobs:
 ## Bibliography
 1. Main Tutorial [Code With Sahand](https://www.youtube.com/watch?v=Zw8Wl1W0LW0&t=9s) 
 2. [NextJS](https://nextjs.org/docs/getting-started/installation) 
+
+{
+   `pm2 start npm --name "nextjs-app" -- start -- -p 3001`
+    pm2 save
+    pm2 startup
+
+    View logs in real-time:
+
+bash
+Copy
+Edit
+pm2 logs nextjs-app
+Restart the app:
+
+bash
+Copy
+Edit
+pm2 restart nextjs-app
+Stop the app:
+
+bash
+Copy
+Edit
+pm2 stop nextjs-app
+Delete the app from PM2:
+
+bash
+Copy
+Edit
+pm2 delete nextjs-app
+
+
+
+}
