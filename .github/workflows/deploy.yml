@@ -10,44 +10,59 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the latest code (if needed locally, though we’re deploying from the VPS repo)
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Step 2: Set up Node.js environment
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: "22" # Using Node.js 22 as per your environment
 
+      # Step 3: Deploy to VPS
       - name: Deploy to VPS
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           VPS_IP: ${{ secrets.VPS_IP }}
         run: |
-          # Set up SSH for secure connection
+          # Create the .ssh directory and configure the SSH key.
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          # Use printf to preserve newlines and remove carriage returns, ensuring proper key format.
+          printf "%s" "${{ secrets.DEPLOY_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
+          # Add the VPS to the known_hosts to avoid host authenticity prompts.
           ssh-keyscan -H ${{ secrets.VPS_IP }} >> ~/.ssh/known_hosts
 
-          # Connect to the VPS and deploy
+          # Connect to the VPS and run deployment commands.
           ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=120 -i ~/.ssh/id_ed25519 vefrmeistari@${{ secrets.VPS_IP }} << 'EOF'
             set -e
 
-            # Mark the repository as safe
+            # Mark the repository as safe for git operations.
             git config --global --add safe.directory /var/www/_blogCronicasDelVejerete
             
-            # Navigate to the project directory
+            # Navigate to the project directory.
             cd /var/www/_blogCronicasDelVejerete
 
-            # Pull the latest code from the repository
-            git pull origin main
+            # Optional: Create a backup of the current repository state.
+            backup_file="backup_$(date +%Y%m%d_%H%M%S).tar.gz"
+            echo "Creating backup of current repository state: \$backup_file"
+            tar -czf "\$backup_file" .
+            echo "Backup created at \$backup_file"
 
-            # Install backend dependencies
+            # Securely update the repository:
+            # 1. Fetch the latest changes.
+            # 2. Force the local branch to match the remote branch, discarding local changes.
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Install backend dependencies.
             npm install
 
-            # Build the app in production mode
+            # Build the app in production mode.
             NODE_ENV=production npm run build
 
-            # Start or restart the backend using PM2
+            # Start the Next.js app with PM2 on port 3001:
+            # If the app isn't already running, this command will start it; if it is, the restart will occur.
             pm2 start npm --name "nextjs-app" -- start -- -p 3001 || pm2 restart nextjs-app
           EOF
