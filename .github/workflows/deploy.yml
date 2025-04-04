@@ -10,59 +10,56 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the latest code (if needed locally, though we’re deploying from the VPS repo)
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step 2: Set up Node.js environment
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: "22" # Using Node.js 22 as per your environment
+          node-version: "22"
 
-      # Step 3: Deploy to VPS
       - name: Deploy to VPS
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           VPS_IP: ${{ secrets.VPS_IP }}
         run: |
-          # Create the .ssh directory and configure the SSH key.
+          # Ensure the SSH directory exists
           mkdir -p ~/.ssh
-          # Use printf to preserve newlines and remove carriage returns, ensuring proper key format.
-          printf "%s" "${{ secrets.DEPLOY_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
+
+          # Store the private SSH key securely
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" | base64 --decode > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          # Add the VPS to the known_hosts to avoid host authenticity prompts.
+
+          # Add the VPS to known hosts
           ssh-keyscan -H ${{ secrets.VPS_IP }} >> ~/.ssh/known_hosts
 
-          # Connect to the VPS and run deployment commands.
-          ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=120 -i ~/.ssh/id_ed25519 vefrmeistari@${{ secrets.VPS_IP }} << 'EOF'
+          # Start SSH agent and add the key (fix for "error in libcrypto")
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_ed25519
+
+          # Connect to VPS and deploy
+          ssh -o StrictHostKeyChecking=no vefrmeistari@${{ secrets.VPS_IP }} << 'EOF'
             set -e
 
-            # Mark the repository as safe for git operations.
+            # Mark the repository as safe
             git config --global --add safe.directory /var/www/_blogCronicasDelVejerete
-            
-            # Navigate to the project directory.
+
+            # Navigate to project
             cd /var/www/_blogCronicasDelVejerete
 
-            # Optional: Create a backup of the current repository state.
+            # Create backup before pulling changes
             backup_file="backup_$(date +%Y%m%d_%H%M%S).tar.gz"
-            echo "Creating backup of current repository state: \$backup_file"
             tar -czf "\$backup_file" .
-            echo "Backup created at \$backup_file"
+            echo "Backup created: \$backup_file"
 
-            # Securely update the repository:
-            # 1. Fetch the latest changes.
-            # 2. Force the local branch to match the remote branch, discarding local changes.
+            # Reset local repo safely
             git fetch origin main
             git reset --hard origin/main
 
-            # Install backend dependencies.
+            # Install dependencies and build
             npm install
-
-            # Build the app in production mode.
             NODE_ENV=production npm run build
 
-            # Start the Next.js app with PM2 on port 3001:
-            # If the app isn't already running, this command will start it; if it is, the restart will occur.
+            # Restart app using PM2
             pm2 start npm --name "nextjs-app" -- start -- -p 3001 || pm2 restart nextjs-app
           EOF
