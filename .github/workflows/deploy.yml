@@ -23,43 +23,42 @@ jobs:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           VPS_IP: ${{ secrets.VPS_IP }}
         run: |
-          # Ensure the SSH directory exists
+          # 1. Create the .ssh directory if it doesn't exist
           mkdir -p ~/.ssh
 
-          # Store the private SSH key securely
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" | base64 --decode > ~/.ssh/id_ed25519
+          # 2. Save the SSH private key securely
+          echo "${DEPLOY_SSH_KEY}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
-          # Add the VPS to known hosts
-          ssh-keyscan -H ${{ secrets.VPS_IP }} >> ~/.ssh/known_hosts
+          # 3. Add the VPS to known hosts to avoid manual prompt
+          ssh-keyscan -H $VPS_IP >> ~/.ssh/known_hosts
 
-          # Start SSH agent and add the key (fix for "error in libcrypto")
+          # 4. Start the SSH agent and add the private key
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_ed25519
 
-          # Connect to VPS and deploy
-          ssh -o StrictHostKeyChecking=no vefrmeistari@${{ secrets.VPS_IP }} << 'EOF'
+          # 5. SSH into the VPS and run deployment commands
+          ssh -o StrictHostKeyChecking=no vefrmeistari@$VPS_IP << 'EOF'
             set -e
 
-            # Mark the repository as safe
+            # Mark repo as safe for git
             git config --global --add safe.directory /var/www/_blogCronicasDelVejerete
 
-            # Navigate to project
             cd /var/www/_blogCronicasDelVejerete
 
-            # Create backup before pulling changes
+            # Optional: Backup current version
             backup_file="backup_$(date +%Y%m%d_%H%M%S).tar.gz"
-            tar -czf "\$backup_file" .
-            echo "Backup created: \$backup_file"
+            tar -czf "$backup_file" .
+            echo "Backup created: $backup_file"
 
-            # Reset local repo safely
+            # Hard reset to match remote
             git fetch origin main
             git reset --hard origin/main
 
-            # Install dependencies and build
+            # Install and build
             npm install
             NODE_ENV=production npm run build
 
-            # Restart app using PM2
+            # Restart via PM2
             pm2 start npm --name "nextjs-app" -- start -- -p 3001 || pm2 restart nextjs-app
           EOF
