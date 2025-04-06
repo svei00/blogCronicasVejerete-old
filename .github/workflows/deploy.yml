@@ -1,4 +1,4 @@
-name: Deploy Node.js app to AlmaLinux
+name: Deploy Blog App to VPS
 
 on:
   push:
@@ -16,49 +16,31 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: "22"
+          node-version: "20"
 
       - name: Deploy to VPS
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           VPS_IP: ${{ secrets.VPS_IP }}
         run: |
-          # 1. Create the .ssh directory if it doesn't exist
+          # 1. Set up SSH
           mkdir -p ~/.ssh
-
-          # 2. Save the SSH private key securely
-          echo "${DEPLOY_SSH_KEY}" > ~/.ssh/id_ed25519
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.VPS_IP }} >> ~/.ssh/known_hosts
 
-          # 3. Add the VPS to known hosts to avoid manual prompt
-          ssh-keyscan -H $VPS_IP >> ~/.ssh/known_hosts
-
-          # 4. Start the SSH agent and add the private key
-          eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/id_ed25519
-
-          # 5. SSH into the VPS and run deployment commands
-          ssh -o StrictHostKeyChecking=no vefrmeistari@$VPS_IP << 'EOF'
+          # 2. Connect to VPS
+          ssh -i ~/.ssh/id_ed25519 vefrmeistari@${{ secrets.VPS_IP }} << 'EOF'
             set -e
-
-            # Mark repo as safe for git
-            git config --global --add safe.directory /var/www/_blogCronicasDelVejerete
 
             cd /var/www/_blogCronicasDelVejerete
 
-            # Optional: Backup current version
-            backup_file="backup_$(date +%Y%m%d_%H%M%S).tar.gz"
-            tar -czf "$backup_file" .
-            echo "Backup created: $backup_file"
-
-            # Hard reset to match remote
+            git config --global --add safe.directory /var/www/_blogCronicasDelVejerete
             git fetch origin main
             git reset --hard origin/main
 
-            # Install and build
             npm install
             NODE_ENV=production npm run build
 
-            # Restart via PM2
             pm2 start npm --name "nextjs-app" -- start -- -p 3001 || pm2 restart nextjs-app
           EOF
