@@ -72,7 +72,7 @@ const Header: FC = () => {
           href="/"
           className="self-center whitespace-nowrap text-sm sm:text-xl font-semibold dark:text-white"
         >
-          <span className="px-2 py-1 bg-gradient-to-r from-purple-600 via-yellow-300 to-orange-500 hover:from-orange-500 hover:via-amber-300 hover:to-purple-600 rounded-lg text-white transition-all duration-500">
+          <span className="px-2 py-1 bg-gradient-to-r from-purple-600 via-yellow-300 to-orange-500 hover:from-orange-500 hover:via-green-300 hover:to-purple-600 rounded-lg text-white transition-all duration-500">
             Crónicas del Vejerete
           </span>
           Blog
