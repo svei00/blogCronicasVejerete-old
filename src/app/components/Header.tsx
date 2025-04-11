@@ -97,7 +97,7 @@ const Header: FC = () => {
         {/* Container for theme toggle, admin create-post, and user authentication buttons */}
         <div className="flex gap-2 md:order-2 items-center">
           {/* Conditionally show the create-post button if user is signed in and is admin */}
-          {user?.publicMetadata?.isAdmin && (
+          {(user?.publicMetadata as { isAdmin?: boolean })?.isAdmin && (
             <Link href="/dashboard/create-post">
               {/* Using a Button with the pen icon */}
               <Button
