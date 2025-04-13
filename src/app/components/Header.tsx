@@ -101,9 +101,13 @@ const Header: FC = () => {
             <Link href="/dashboard/create-post">
               {/* Using a Button with the pen icon */}
               <Button
-                color="info"
+                // color="info"
                 pill
-                className="w-10 h-10"
+                className={`w-10 h-10 transition-all duration-500 ${
+                  currentTheme === "dark"
+                    ? "bg-purple-600 hover:bg-purple-500 text-white"
+                    : "bg-gradient-to-r from-teal-300 via-teal-400 to-teal-500 hover:from-teal-400 hover:via-teal-500 hover:to-teal-600 text-white"
+                }`}
                 title="Create Post"
               >
                 <FaPen />
