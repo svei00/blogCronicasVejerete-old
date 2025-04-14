@@ -102,6 +102,7 @@ const Header: FC = () => {
               {/* Using a Button with the pen icon */}
               <Button
                 // color="info"
+                gradientDuoTone="purpleToBlue"
                 pill
                 className={`w-10 h-10 transition-all duration-500 ${
                   currentTheme === "dark"
