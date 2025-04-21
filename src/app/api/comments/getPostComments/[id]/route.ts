@@ -2,27 +2,34 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/lib/mongodb/mongoose";
-import Comment from "@/lib/models/comment.model"; // Adjust if your path differs
+import Comment from "@/lib/models/comment.model";
 
-// This function handles GET requests for fetching comments by postId
+/**
+ * GET /api/comments/getPostComments/[postId]
+ * Retrieves all comments for a specific post, sorted by newest first.
+ */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { postId: string } }
+  { params }: { params: { postId: string } }  // `postId` matches the [postId] folder name
 ) {
-  await connect(); // Connect to MongoDB
+  // 1. Ensure MongoDB connection
+  await connect();
 
   try {
-    const { postId } = params; // Extract postId from dynamic route
+    // 2. Extract `postId` from the dynamic route parameters
+    const { postId } = params;
 
-    const comments = await Comment.find({ postId }) // Query all comments with this postId
-      .sort({ createdAt: -1 }) // Sort by most recent
-      .lean(); // Return plain JS objects, not Mongoose documents
+    // 3. Query comments for this post, sorted descending by creation date
+    //    .lean() returns plain JS objects (no Mongoose getters or methods)
+    const comments = await Comment.find({ postId })
+      .sort({ createdAt: -1 })
+      .lean();
 
-    return NextResponse.json(comments, { status: 200 }); // Return success response
-  } catch (error) {
-    return NextResponse.json(
-      { message: error instanceof Error ? error.message : "Server error" },
-      { status: 500 }
-    );
+    // 4. Return the comments with HTTP 200
+    return NextResponse.json(comments, { status: 200 });
+  } catch (error: unknown) {
+    // 5. Error handling: narrow `error` to `Error` before reading message
+    const message = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ message }, { status: 500 });
   }
 }
