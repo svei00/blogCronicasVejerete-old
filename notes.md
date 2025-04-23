@@ -3444,41 +3444,42 @@ jobs:
    ```
 3. Now create the route to get the comments: `/src/app/api/comments/getPostComments/[postId]/route.ts`
    ```
+
    // /src/app/api/comments/getPostComments/[postId]/route.ts
 
-      import { NextRequest, NextResponse } from "next/server";
-      import { connect } from "@/lib/mongodb/mongoose";
-      import Comment from "@/lib/models/comment.model";
+   import { NextRequest, NextResponse } from "next/server";
+   import { connect } from "@/lib/mongodb/mongoose";
+   import Comment from "@/lib/models/comment.model";
 
-      /**
-      * GET /api/comments/getPostComments/[postId]
-      * Retrieves all comments for a specific post, sorted by newest first.
-      */
-      export async function GET(
-      req: NextRequest,
-      { params }: { params: { postId: string } }  // `postId` matches the [postId] folder name
-      ) {
-      // 1. Ensure MongoDB connection
-      await connect();
+   /**
+   * GET /api/comments/getPostComments/[postId]
+   *  
+   * Since Next.js 15 no longer accepts a typed `context` parameter for route handlers,
+   * we extract the dynamic `[postId]` segment from request.nextUrl.pathname.
+   */
+   export async function GET(request: NextRequest) {
+   // 1. Ensure our MongoDB client is connected.
+   await connect();
 
-      try {
-         // 2. Extract `postId` from the dynamic route parameters
-         const { postId } = params;
+   try {
+      // 2. Extract the postId from the URL path:
+      //    e.g. pathname === "/api/comments/getPostComments/abcd1234"
+      const parts = request.nextUrl.pathname.split("/");
+      const postId = parts[parts.length - 1];
 
-         // 3. Query comments for this post, sorted descending by creation date
-         //    .lean() returns plain JS objects (no Mongoose getters or methods)
-         const comments = await Comment.find({ postId })
-            .sort({ createdAt: -1 })
-            .lean();
+      // 3. Query the Comment model for this postId, newest first.
+      const comments = await Comment.find({ postId })
+         .sort({ createdAt: -1 })
+         .lean(); // returns plain JS objects
 
-         // 4. Return the comments with HTTP 200
-         return NextResponse.json(comments, { status: 200 });
-      } catch (error: unknown) {
-         // 5. Error handling: narrow `error` to `Error` before reading message
-         const message = error instanceof Error ? error.message : "Internal Server Error";
-         return NextResponse.json({ message }, { status: 500 });
-      }
-      }
+      // 4. Return the array of comments as JSON.
+      return NextResponse.json(comments, { status: 200 });
+   } catch (err: unknown) {
+      // 5. Handle any errors cleanly.
+      const message = err instanceof Error ? err.message : "Server error";
+      return NextResponse.json({ message }, { status: 500 });
+   }
+   }
 
    ```
 
