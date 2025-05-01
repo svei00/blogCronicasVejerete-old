@@ -7,9 +7,7 @@ import {
   fetchPostComments,
   createComment,
   likeComment,
-  editComment,
-  deleteComment,
-} from "@/lib/actions/comments";
+} from "@/lib/actions/comments"; // only import used functions
 import { useUser } from "@clerk/nextjs";
 
 interface Props {
@@ -49,10 +47,7 @@ export default function CommentSection({ postId }: Props) {
     try {
       const updated = await likeComment(commentId);
       setComments((prev) =>
-        prev.map((c) =>
-          // Use _id (string) instead of c.id
-          c._id === commentId ? updated : c
-        )
+        prev.map((c) => (String(c._id) === commentId ? updated : c))
       );
     } catch (err: unknown) {
       console.error("Failed to like comment:", err);
@@ -81,19 +76,15 @@ export default function CommentSection({ postId }: Props) {
 
       {/* Render each comment */}
       {comments.map((c) => (
-        <div
-          // Use String(c._id) to ensure key is a string
-          key={String(c._id)}
-          className="border p-4 rounded shadow-sm"
-        >
+        <div key={String(c._id)} className="border p-4 rounded shadow-sm">
           <p>{c.content}</p>
           <button
-            onClick={() => handleLike(c._id)} // Pass c._id (string)
+            onClick={() => handleLike(String(c._id))}
             className="text-sm text-blue-500 hover:underline"
           >
             Like ({c.numberOfLikes})
           </button>
-          {/* Here you could add edit/delete buttons conditionally */}
+          {/* Future: edit/delete buttons if allowed */}
         </div>
       ))}
     </div>
