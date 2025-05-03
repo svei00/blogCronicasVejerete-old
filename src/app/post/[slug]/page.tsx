@@ -1,12 +1,17 @@
-// Import necessary components and modules
-import CallToAction from "@/app/components/CallToAction";
-import RecentPosts from "@/app/components/RecentPosts";
+// src/app/post/[slug]/page.tsx
+
+"use client";
+// We need "use client" so that this file can render the client-side CommentSection component.
+
+import React from "react";
 import { Button } from "flowbite-react";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import CallToAction from "@/app/components/CallToAction";
+import RecentPosts from "@/app/components/RecentPosts";
+import CommentSection from "@/app/components/CommentSection"; // Import the comment UI
 
-// Define the structure of a Post object
+// Define the shape of a Post object
 interface Post {
   title: string;
   category: string;
@@ -15,41 +20,32 @@ interface Post {
   createdAt: string;
 }
 
-// Define the type for page props. Note that `params` is a Promise resolving to an object with a `slug` string.
+// Props type for this page: params.slug will be provided by the router
 interface PostPageProps {
-  params: Promise<{
+  params: {
     slug: string;
-  }>;
+  };
 }
 
-// The PostPage component is declared as an async function because it performs asynchronous data fetching.
-const PostPage = async ({ params }: PostPageProps) => {
-  // Await the params promise to extract the slug parameter.
-  const { slug } = await params;
+// This page component fetches its own data and then renders both server-side and client-side pieces
+export default async function PostPage({ params }: PostPageProps) {
+  const slug = params.slug;
 
+  // Fetch the post data from your existing API endpoint
   let post: Post | null = null;
-
   try {
-    // Fetch the post data from the API using the slug.
-    // We use POST here and send the slug in the request body.
-    // The 'no-store' cache option ensures that fresh data is fetched each time.
-    const result = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/post/get`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/post/get`, {
       method: "POST",
       body: JSON.stringify({ slug }),
       cache: "no-store",
     });
-
-    // If the API response is not OK, throw an error.
-    if (!result.ok) {
+    if (!res.ok) {
       throw new Error("Failed to fetch post");
     }
-
-    // Parse the JSON response and assign the first post from the returned array.
-    const data = await result.json();
+    const data = await res.json();
     post = data.posts[0];
-  } catch (error) {
-    // Log the error to the console and set a fallback post object in case of failure.
-    console.error("Error fetching post:", error);
+  } catch (err: unknown) {
+    console.error("Error fetching post:", err);
     post = {
       title: "Failed to load post",
       category: "",
@@ -59,7 +55,7 @@ const PostPage = async ({ params }: PostPageProps) => {
     };
   }
 
-  // If no valid post data is found, render a "Post not found" message.
+  // If no post found or fetch failed, show a not-found message
   if (!post || post.title === "Failed to load post") {
     return (
       <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
@@ -70,51 +66,60 @@ const PostPage = async ({ params }: PostPageProps) => {
     );
   }
 
-  // Render the post details along with additional components.
+  // Render the post along with CallToAction, RecentPosts, and CommentSection
   return (
     <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
-      {/* Display the post title */}
+      {/* Post title */}
       <h1 className="text-3xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl">
         {post.title}
       </h1>
-      {/* A link to search posts by the current post's category */}
+
+      {/* Button linking to category search */}
       <Link
-        href={`/search?category=${post.category}`}
+        href={`/search?category=${encodeURIComponent(post.category)}`}
         className="self-center mt-5"
       >
         <Button color="gray" pill size="xs">
           {post.category}
         </Button>
       </Link>
-      {/* Use Next.js' Image component for optimized image rendering */}
+
+      {/* Post image */}
       <Image
         src={post.image}
         alt={post.title}
-        width={800} // Set the width in pixels
-        height={600} // Set the height in pixels
+        width={800}
+        height={600}
         className="mt-10 p-3 max-h-[600px] w-full object-cover"
       />
-      {/* Display metadata: creation date and estimated reading time */}
+
+      {/* Metadata: date and reading time */}
       <div className="flex justify-between p-3 border-b border-slate-500 mx-auto w-full max-w-2xl text-xs">
         <span>{new Date(post.createdAt).toLocaleDateString()}</span>
         <span className="italic">
           {(post.content.length / 1000).toFixed(0)} mins read
         </span>
       </div>
-      {/* Render the post content. Using dangerouslySetInnerHTML allows HTML content to be rendered directly. */}
+
+      {/* Post content */}
       <div
         className="p-3 max-w-2xl mx-auto w-full post-content"
         dangerouslySetInnerHTML={{ __html: post.content }}
-      ></div>
-      {/* Render the CallToAction component */}
+      />
+
+      {/* Call to action banner */}
       <div className="max-w-4xl mx-auto w-full">
         <CallToAction />
       </div>
-      {/* Render the RecentPosts component with a limit of 3 posts */}
+
+      {/* Recent posts section */}
       <RecentPosts limit={3} />
+
+      {/* Comments section */}
+      <section className="max-w-4xl mx-auto w-full mt-16">
+        <h2 className="text-2xl font-semibold mb-4">Comments</h2>
+        <CommentSection postId={slug} />
+      </section>
     </main>
   );
-};
-
-// Export the PostPage component as the default export
-export default PostPage;
+}
