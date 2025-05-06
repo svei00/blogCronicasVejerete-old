@@ -6,55 +6,45 @@ import Image from "next/image";
 import Link from "next/link";
 import CallToAction from "@/app/components/CallToAction";
 import RecentPosts from "@/app/components/RecentPosts";
-import CommentSection from "@/app/components/CommentSection"; // Client-side component
+import CommentSection from "@/app/components/CommentSection";
 
-// Shape of the post data returned by your API
-interface Post {
+// Define the shape of a Post object as returned by your API
+type Post = {
   title: string;
   category: string;
   image: string;
   content: string;
   createdAt: string;
-}
+};
 
-// Props for this page component: Next.js supplies params.slug directly
-interface PostPageProps {
-  params: {
-    slug: string;
-  };
-}
+// This page lives at /post/[slug]
+// Next.js will call it with a props object that contains `params.slug`
+export default async function PostPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const slug = params.slug;
 
-// This remains a server component (no "use client" directive)
-// so it can be async and await data fetching.
-export default async function PostPage({ params }: PostPageProps) {
-  const { slug } = params;
-
-  // Fetch the post data from your API
-  let post: Post | null = null;
+  // Fetch post data from your backend API
+  let post: Post;
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/post/get`, {
       method: "POST",
       body: JSON.stringify({ slug }),
-      cache: "no-store", // always fetch fresh data
+      cache: "no-store",
     });
     if (!res.ok) {
-      throw new Error("Failed to fetch post");
+      throw new Error(`Failed to fetch post: ${res.status}`);
     }
-    const data = await res.json();
-    post = data.posts[0];
+    const json = await res.json();
+    post = json.posts[0];
+    if (!post) {
+      throw new Error("No post returned");
+    }
   } catch (err: unknown) {
-    console.error("Error fetching post:", err);
-    post = {
-      title: "Failed to load post",
-      category: "",
-      image: "",
-      content: "",
-      createdAt: "",
-    };
-  }
-
-  // If fetching failed or returned nothing, show a not-found message
-  if (!post || post.title === "Failed to load post") {
+    // Log error and render a fallback
+    console.error("Error loading post:", err);
     return (
       <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
         <h2 className="text-3xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl">
@@ -64,15 +54,15 @@ export default async function PostPage({ params }: PostPageProps) {
     );
   }
 
-  // Render the post and its associated components, including comments
+  // Render the post along with comments
   return (
     <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
-      {/* Post title */}
+      {/* Title */}
       <h1 className="text-3xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl">
         {post.title}
       </h1>
 
-      {/* Category button linking to search */}
+      {/* Category link */}
       <Link
         href={`/search?category=${encodeURIComponent(post.category)}`}
         className="self-center mt-5"
@@ -82,7 +72,7 @@ export default async function PostPage({ params }: PostPageProps) {
         </Button>
       </Link>
 
-      {/* Main post image */}
+      {/* Main image */}
       <Image
         src={post.image}
         alt={post.title}
@@ -91,7 +81,7 @@ export default async function PostPage({ params }: PostPageProps) {
         className="mt-10 p-3 max-h-[600px] w-full object-cover"
       />
 
-      {/* Metadata: date and estimated reading time */}
+      {/* Metadata */}
       <div className="flex justify-between p-3 border-b border-slate-500 mx-auto w-full max-w-2xl text-xs">
         <span>{new Date(post.createdAt).toLocaleDateString()}</span>
         <span className="italic">
@@ -99,21 +89,21 @@ export default async function PostPage({ params }: PostPageProps) {
         </span>
       </div>
 
-      {/* Render HTML content safely */}
+      {/* Content HTML */}
       <div
         className="p-3 max-w-2xl mx-auto w-full post-content"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
 
-      {/* Call to action banner */}
+      {/* Call to action */}
       <div className="max-w-4xl mx-auto w-full">
         <CallToAction />
       </div>
 
-      {/* Recent posts list */}
+      {/* Recent posts */}
       <RecentPosts limit={3} />
 
-      {/* Comments section: client-side component */}
+      {/* Comments section */}
       <section className="max-w-4xl mx-auto w-full mt-16">
         <h2 className="text-2xl font-semibold mb-4">Comments</h2>
         <CommentSection postId={slug} />
