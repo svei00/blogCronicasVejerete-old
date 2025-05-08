@@ -8,103 +8,134 @@ import CallToAction from "@/app/components/CallToAction";
 import RecentPosts from "@/app/components/RecentPosts";
 import CommentSection from "@/app/components/CommentSection";
 
-// Define the shape of the post data returned by your API
+/**
+ * Type definition for blog post data returned from the API
+ */
 type Post = {
   title: string;
   category: string;
   image: string;
   content: string;
   createdAt: string;
+  slug: string;
 };
 
 /**
- * This is the Next.js App Router page for /post/[slug].
- *    - Must be named `Page`
- *    - Props: { params: { slug: string } }
+ * Page component for individual blog post view
+ * @param params - Route parameters containing the post slug
+ * @returns JSX.Element - The rendered post page
  */
 export default async function Page({ params }: { params: { slug: string } }) {
   const { slug } = params;
 
-  // 1. Fetch the post data
-  let post: Post;
+  // Fetch post data from API
+  let post: Post | null = null;
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/post/get`, {
-      method: "POST",
-      body: JSON.stringify({ slug }),
-      cache: "no-store",
-    });
-    if (!res.ok) {
-      throw new Error(`Failed to fetch post: ${res.status}`);
+    const apiResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_URL}/api/post/get`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ slug }),
+        cache: "no-store",
+      }
+    );
+
+    if (!apiResponse.ok) {
+      throw new Error(`HTTP error! status: ${apiResponse.status}`);
     }
-    const json = await res.json();
-    post = json.posts[0];
+
+    const responseData = await apiResponse.json();
+    post = responseData.posts[0];
+
     if (!post) {
-      throw new Error("No post returned");
+      throw new Error("No post found with the provided slug");
     }
-  } catch (err: unknown) {
-    console.error("Error loading post:", err);
-    // Early return "not found" page if fetch fails
+  } catch (error) {
+    console.error("Error loading post:", error);
     return (
       <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
         <h2 className="text-3xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl">
           Post not found
         </h2>
+        <p className="text-center text-red-500 mt-4">
+          The requested post could not be loaded.
+        </p>
       </main>
     );
   }
 
-  // 2. Render the post content + comments
+  // Calculate reading time in minutes
+  const readingTime = Math.ceil(post.content.length / 1000);
+
   return (
     <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
-      {/* Title */}
-      <h1 className="text-3xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl">
-        {post.title}
-      </h1>
+      {/* Post Header Section */}
+      <article>
+        <h1 className="text-3xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl">
+          {post.title}
+        </h1>
 
-      {/* Category link */}
-      <Link
-        href={`/search?category=${encodeURIComponent(post.category)}`}
-        className="self-center mt-5"
-      >
-        <Button color="gray" pill size="xs">
-          {post.category}
-        </Button>
-      </Link>
+        {/* Category Badge */}
+        <div className="self-center mt-5">
+          <Link href={`/search?category=${encodeURIComponent(post.category)}`}>
+            <Button color="gray" pill size="xs">
+              {post.category}
+            </Button>
+          </Link>
+        </div>
 
-      {/* Image */}
-      <Image
-        src={post.image}
-        alt={post.title}
-        width={800}
-        height={600}
-        className="mt-10 p-3 max-h-[600px] w-full object-cover"
-      />
+        {/* Featured Image */}
+        <div className="mt-10 p-3">
+          <Image
+            src={post.image}
+            alt={post.title}
+            width={800}
+            height={600}
+            className="max-h-[600px] w-full object-cover rounded-lg shadow-xl"
+            priority
+          />
+        </div>
 
-      {/* Metadata */}
-      <div className="flex justify-between p-3 border-b border-slate-500 mx-auto w-full max-w-2xl text-xs">
-        <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-        <span className="italic">
-          {(post.content.length / 1000).toFixed(0)} mins read
-        </span>
-      </div>
+        {/* Post Metadata */}
+        <div className="flex justify-between p-3 border-b border-slate-500 mx-auto w-full max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+          <time dateTime={post.createdAt}>
+            {new Date(post.createdAt).toLocaleDateString("es-ES", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </time>
+          <span>{readingTime} min read</span>
+        </div>
+      </article>
 
-      {/* HTML content */}
-      <div
-        className="p-3 max-w-2xl mx-auto w-full post-content"
+      {/* Post Content */}
+      <section
+        className="p-3 max-w-2xl mx-auto w-full post-content prose dark:prose-invert"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
 
-      {/* Call to Action */}
-      <div className="max-w-4xl mx-auto w-full">
+      {/* Call to Action Section */}
+      <div className="max-w-4xl mx-auto w-full my-12">
         <CallToAction />
       </div>
 
-      {/* Recent Posts */}
-      <RecentPosts limit={3} />
+      {/* Related Posts */}
+      <div className="my-12">
+        <h2 className="text-2xl font-bold mb-6 text-center">
+          More Recent Posts
+        </h2>
+        <RecentPosts limit={3} excludeSlug={post.slug} />
+      </div>
 
       {/* Comments Section */}
-      <section className="max-w-4xl mx-auto w-full mt-16">
-        <h2 className="text-2xl font-semibold mb-4">Comments</h2>
+      <section className="max-w-4xl mx-auto w-full mt-8 mb-16">
+        <h2 className="text-2xl font-bold mb-6 text-center">
+          Join the Discussion
+        </h2>
         <CommentSection postId={slug} />
       </section>
     </main>
