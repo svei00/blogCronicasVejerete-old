@@ -7,6 +7,7 @@ import Link from "next/link";
 import CallToAction from "@/app/components/CallToAction";
 import RecentPosts from "@/app/components/RecentPosts";
 import CommentSection from "@/app/components/CommentSection";
+import type { Metadata } from "next";
 
 /**
  * Type definition for blog post data returned from the API
@@ -20,12 +21,18 @@ type Post = {
   slug: string;
 };
 
+// Add proper PageProps type for Next.js dynamic routes
+type PageProps = {
+  params: { slug: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
+};
+
 /**
  * Page component for individual blog post view
  * @param params - Route parameters containing the post slug
  * @returns JSX.Element - The rendered post page
  */
-export default async function Page({ params }: { params: { slug: string } }) {
+export default async function Page({ params }: PageProps) {
   const { slug } = params;
 
   // Fetch post data from API
