@@ -7,7 +7,6 @@ import Link from "next/link";
 import CallToAction from "@/app/components/CallToAction";
 import RecentPosts from "@/app/components/RecentPosts";
 import CommentSection from "@/app/components/CommentSection";
-import type { Metadata } from "next";
 
 /**
  * Type definition for blog post data returned from the API
