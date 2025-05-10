@@ -8,9 +8,6 @@ import CallToAction from "@/app/components/CallToAction";
 import RecentPosts from "@/app/components/RecentPosts";
 import CommentSection from "@/app/components/CommentSection";
 
-/**
- * Type definition for blog post data returned from the API
- */
 type Post = {
   title: string;
   category: string;
@@ -20,45 +17,33 @@ type Post = {
   slug: string;
 };
 
-// Add proper PageProps type for Next.js dynamic routes
-type PageProps = {
-  params: { slug: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
-};
+interface PageParams {
+  params: {
+    slug: string;
+  };
+}
 
-/**
- * Page component for individual blog post view
- * @param params - Route parameters containing the post slug
- * @returns JSX.Element - The rendered post page
- */
-export default async function Page({ params }: PageProps) {
+export default async function Page({ params }: PageParams) {
   const { slug } = params;
 
-  // Fetch post data from API
   let post: Post | null = null;
   try {
-    const apiResponse = await fetch(
+    const response = await fetch(
       `${process.env.NEXT_PUBLIC_URL}/api/post/get`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ slug }),
         cache: "no-store",
       }
     );
 
-    if (!apiResponse.ok) {
-      throw new Error(`HTTP error! status: ${apiResponse.status}`);
-    }
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-    const responseData = await apiResponse.json();
-    post = responseData.posts[0];
+    const data = await response.json();
+    post = data.posts[0];
 
-    if (!post) {
-      throw new Error("No post found with the provided slug");
-    }
+    if (!post) throw new Error("Post not found");
   } catch (error) {
     console.error("Error loading post:", error);
     return (
@@ -73,18 +58,15 @@ export default async function Page({ params }: PageProps) {
     );
   }
 
-  // Calculate reading time in minutes
   const readingTime = Math.ceil(post.content.length / 1000);
 
   return (
     <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
-      {/* Post Header Section */}
       <article>
         <h1 className="text-3xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl">
           {post.title}
         </h1>
 
-        {/* Category Badge */}
         <div className="self-center mt-5">
           <Link href={`/search?category=${encodeURIComponent(post.category)}`}>
             <Button color="gray" pill size="xs">
@@ -93,7 +75,6 @@ export default async function Page({ params }: PageProps) {
           </Link>
         </div>
 
-        {/* Featured Image */}
         <div className="mt-10 p-3">
           <Image
             src={post.image}
@@ -105,7 +86,6 @@ export default async function Page({ params }: PageProps) {
           />
         </div>
 
-        {/* Post Metadata */}
         <div className="flex justify-between p-3 border-b border-slate-500 mx-auto w-full max-w-2xl text-sm text-gray-500 dark:text-gray-400">
           <time dateTime={post.createdAt}>
             {new Date(post.createdAt).toLocaleDateString("es-ES", {
@@ -118,18 +98,15 @@ export default async function Page({ params }: PageProps) {
         </div>
       </article>
 
-      {/* Post Content */}
       <section
         className="p-3 max-w-2xl mx-auto w-full post-content prose dark:prose-invert"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
 
-      {/* Call to Action Section */}
       <div className="max-w-4xl mx-auto w-full my-12">
         <CallToAction />
       </div>
 
-      {/* Related Posts */}
       <div className="my-12">
         <h2 className="text-2xl font-bold mb-6 text-center">
           More Recent Posts
@@ -137,7 +114,6 @@ export default async function Page({ params }: PageProps) {
         <RecentPosts limit={3} excludeSlug={post.slug} />
       </div>
 
-      {/* Comments Section */}
       <section className="max-w-4xl mx-auto w-full mt-8 mb-16">
         <h2 className="text-2xl font-bold mb-6 text-center">
           Join the Discussion
