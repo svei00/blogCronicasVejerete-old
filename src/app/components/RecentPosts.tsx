@@ -1,14 +1,13 @@
-import React from "react"; // Import React to ensure JSX types are available
+import React from "react";
 import PostCard from "./PostCard";
 
 // Define the props expected by the RecentPosts component.
 interface RecentPostsProps {
-  limit: number; // The number of posts to fetch.
+  limit: number; // The number of posts to fetch
+  excludeSlug?: string; // Optional slug to exclude from the list
 }
 
 // Define an interface for the post data.
-// This includes the properties that PostCard is expected to use.
-// You can expand this interface if you have additional properties.
 interface PostData {
   _id: string;
   slug: string;
@@ -19,43 +18,39 @@ interface PostData {
 }
 
 // Async component that fetches recent posts from the API and renders them.
-// The return type is annotated as Promise<React.ReactElement> to avoid issues with the JSX namespace.
 export default async function RecentPosts({
   limit,
+  excludeSlug,
 }: RecentPostsProps): Promise<React.ReactElement> {
-  // Initialize a variable to hold the fetched posts; default is null.
   let posts: PostData[] | null = null;
 
   try {
-    // Send a POST request to the API endpoint to fetch posts.
-    // The request sends JSON data specifying the desired limit and descending order.
     const result = await fetch(process.env.NEXT_PUBLIC_URL + "/api/post/get", {
       method: "POST",
-      body: JSON.stringify({ limit: limit, order: "desc" }),
-      cache: "no-store", // 'no-store' ensures that fresh data is fetched on every request.
+      body: JSON.stringify({
+        limit: limit,
+        order: "desc",
+        excludeSlug: excludeSlug, // Add exclusion parameter to API call
+      }),
+      cache: "no-store",
     });
 
-    // Parse the JSON response from the API.
     const data = await result.json();
-    // Extract the posts from the response data.
     posts = data.posts;
   } catch (error) {
-    // Log any error that occurs during the fetch operation.
     console.log("Failed to fetch recent posts", error);
   }
 
-  // Return the JSX layout for the recent posts section.
   return (
     <div className="flex flex-col justify-center items-center mb-5">
-      {/* Section header */}
       <h1 className="text-xl mt-5">Últimas publicaciones</h1>
-      {/* Container for displaying fetched posts */}
       <div className="flex flex-wrap gap-5 mt-5 justify-center">
-        {/* If posts exist, map each post to a PostCard component */}
         {posts &&
-          posts.map((post: PostData) => (
-            <PostCard key={post._id} post={post} />
-          ))}
+          posts
+            // Filter out excluded post if specified
+            .filter((post) => !excludeSlug || post.slug !== excludeSlug)
+            // Map remaining posts to PostCard components
+            .map((post: PostData) => <PostCard key={post._id} post={post} />)}
       </div>
     </div>
   );

@@ -1,5 +1,3 @@
-// src/app/post/[slug]/page.tsx
-
 import React from "react";
 import { Button } from "flowbite-react";
 import Image from "next/image";
@@ -17,8 +15,8 @@ type Post = {
   slug: string;
 };
 
-// Use inline type definition instead of interface
-export default async function Page({ params }: { params: { slug: string } }) {
+export default async function Page(props: { params: { slug: string } }) {
+  const { params } = props;
   const { slug } = params;
 
   let post: Post | null = null;
