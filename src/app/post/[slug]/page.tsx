@@ -17,13 +17,8 @@ type Post = {
   slug: string;
 };
 
-interface PageParams {
-  params: {
-    slug: string;
-  };
-}
-
-export default async function Page({ params }: PageParams) {
+// Use inline type definition instead of interface
+export default async function Page({ params }: { params: { slug: string } }) {
   const { slug } = params;
 
   let post: Post | null = null;
@@ -51,9 +46,6 @@ export default async function Page({ params }: PageParams) {
         <h2 className="text-3xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl">
           Post not found
         </h2>
-        <p className="text-center text-red-500 mt-4">
-          The requested post could not be loaded.
-        </p>
       </main>
     );
   }
