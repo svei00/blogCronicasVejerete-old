@@ -1,162 +1,122 @@
 // src/app/post/[slug]/page.tsx
 
-import React from "react";
+// Import necessary components and modules
+import CallToAction from "@/app/components/CallToAction";
+import RecentPosts from "@/app/components/RecentPosts";
 import { Button } from "flowbite-react";
 import Image from "next/image";
 import Link from "next/link";
-import CallToAction from "@/app/components/CallToAction";
-import RecentPosts from "@/app/components/RecentPosts";
-import CommentSection from "@/app/components/CommentSection";
+import React from "react";
 
-// Define the shape of the post data returned by your API
-// This interface is preserved for documentation and type safety
-interface PostData {
+// Define the structure of a Post object
+interface Post {
   title: string;
   category: string;
   image: string;
   content: string;
   createdAt: string;
-  slug: string;
 }
 
-/**
- * Dynamic post page component for individual blog posts
- * @param params - Object containing route parameters
- * @param params.slug - The slug identifier for the post from the URL
- * @returns Promise<React.ReactElement> - The rendered post page component
- */
-export default async function Page({
-  params, // Destructured route parameters
-}: {
-  params: { slug: string }; // Inline type definition for Next.js compatibility
-}): Promise<React.ReactElement> {
-  const { slug } = params;
+// Define the type for page props. Note that `params` is a Promise resolving to an object with a `slug` string.
+interface PostPageProps {
+  params: Promise<{
+    slug: string;
+  }>;
+}
 
-  // Fetch post data from API endpoint
-  let post: PostData;
+// The PostPage component is declared as an async function because it performs asynchronous data fetching.
+const PostPage = async ({ params }: PostPageProps) => {
+  // Await the params promise to extract the slug parameter.
+  const { slug } = await params;
+
+  let post: Post | null = null;
+
   try {
-    // API request configuration
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_URL}/api/post/get`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json", // Required for POST requests
-        },
-        body: JSON.stringify({ slug }), // Send slug as JSON payload
-        cache: "no-store", // Ensure fresh data on each request
-      }
-    );
+    // Fetch the post data from the API using the slug.
+    // We use POST here and send the slug in the request body.
+    // The 'no-store' cache option ensures that fresh data is fetched each time.
+    const result = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/post/get`, {
+      method: "POST",
+      body: JSON.stringify({ slug }),
+      cache: "no-store",
+    });
 
-    // Handle HTTP errors
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    // If the API response is not OK, throw an error.
+    if (!result.ok) {
+      throw new Error("Failed to fetch post");
     }
 
-    // Parse JSON response
-    const data = await response.json();
+    // Parse the JSON response and assign the first post from the returned array.
+    const data = await result.json();
     post = data.posts[0];
-
-    // Validate post data exists
-    if (!post) {
-      throw new Error("No post found in response data");
-    }
   } catch (error) {
-    // Error handling and logging
-    console.error("Error loading post:", error);
+    // Log the error to the console and set a fallback post object in case of failure.
+    console.error("Error fetching post:", error);
+    post = {
+      title: "Failed to load post",
+      category: "",
+      image: "",
+      content: "",
+      createdAt: "",
+    };
+  }
 
-    // Return error state UI
+  // If no valid post data is found, render a "Post not found" message.
+  if (!post || post.title === "Failed to load post") {
     return (
       <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
         <h2 className="text-3xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl">
-          Publicación no encontrada
+          Post not found
         </h2>
-        <p className="text-center text-red-500 mt-4">
-          Lo sentimos, no pudimos cargar esta publicación.
-        </p>
       </main>
     );
   }
 
-  // Calculate reading time in minutes
-  const tiempoLectura = Math.ceil(post.content.length / 1000);
-
-  // Main component render
+  // Render the post details along with additional components.
   return (
     <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
-      {/* Encabezado del artículo */}
-      <article>
-        {/* Título principal */}
-        <h1 className="text-3xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl">
-          {post.title}
-        </h1>
-
-        {/* Categoría */}
-        <div className="self-center mt-5">
-          <Link
-            href={`/search?category=${encodeURIComponent(post.category)}`}
-            className="hover:underline"
-          >
-            <Button color="gray" pill size="xs">
-              {post.category}
-            </Button>
-          </Link>
-        </div>
-
-        {/* Imagen destacada */}
-        <div className="mt-10 p-3">
-          <Image
-            src={post.image}
-            alt={`Imagen destacada para ${post.title}`}
-            width={800}
-            height={600}
-            className="max-h-[600px] w-full object-cover rounded-lg shadow-xl"
-            priority // Priorizar carga de imagen principal
-          />
-        </div>
-
-        {/* Metadatos del artículo */}
-        <div className="flex justify-between p-3 border-b border-slate-500 mx-auto w-full max-w-2xl text-sm text-gray-500 dark:text-gray-400">
-          {/* Fecha de publicación */}
-          <time dateTime={post.createdAt}>
-            {new Date(post.createdAt).toLocaleDateString("es-ES", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </time>
-
-          {/* Tiempo de lectura */}
-          <span>{tiempoLectura} min de lectura</span>
-        </div>
-      </article>
-
-      {/* Contenido HTML del artículo */}
-      <section
-        className="p-3 max-w-2xl mx-auto w-full post-content prose dark:prose-invert"
-        dangerouslySetInnerHTML={{ __html: post.content }}
+      {/* Display the post title */}
+      <h1 className="text-3xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl">
+        {post.title}
+      </h1>
+      {/* A link to search posts by the current post's category */}
+      <Link
+        href={`/search?category=${post.category}`}
+        className="self-center mt-5"
+      >
+        <Button color="gray" pill size="xs">
+          {post.category}
+        </Button>
+      </Link>
+      {/* Use Next.js' Image component for optimized image rendering */}
+      <Image
+        src={post.image}
+        alt={post.title}
+        width={800} // Set the width in pixels
+        height={600} // Set the height in pixels
+        className="mt-10 p-3 max-h-[600px] w-full object-cover"
       />
-
-      {/* Sección de llamada a la acción */}
-      <div className="max-w-4xl mx-auto w-full my-12">
+      {/* Display metadata: creation date and estimated reading time */}
+      <div className="flex justify-between p-3 border-b border-slate-500 mx-auto w-full max-w-2xl text-xs">
+        <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+        <span className="italic">
+          {(post.content.length / 1000).toFixed(0)} mins read
+        </span>
+      </div>
+      {/* Render the post content. Using dangerouslySetInnerHTML allows HTML content to be rendered directly. */}
+      <div
+        className="p-3 max-w-2xl mx-auto w-full post-content"
+        dangerouslySetInnerHTML={{ __html: post.content }}
+      ></div>
+      {/* Render the CallToAction component */}
+      <div className="max-w-4xl mx-auto w-full">
         <CallToAction />
       </div>
-
-      {/* Publicaciones recientes relacionadas */}
-      <div className="my-12">
-        <h2 className="text-2xl font-bold mb-6 text-center">
-          Más publicaciones recientes
-        </h2>
-        <RecentPosts limit={3} excludeSlug={post.slug} />
-      </div>
-
-      {/* Sección de comentarios */}
-      <section className="max-w-4xl mx-auto w-full mt-8 mb-16">
-        <h2 className="text-2xl font-bold mb-6 text-center">
-          Únete a la conversación
-        </h2>
-        <CommentSection postId={slug} />
-      </section>
+      {/* Render the RecentPosts component with a limit of 3 posts */}
+      <RecentPosts limit={3} />
     </main>
   );
-}
+};
+
+// Export the PostPage component as the default export
+export default PostPage;
