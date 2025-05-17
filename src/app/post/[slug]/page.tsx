@@ -7,6 +7,7 @@ import { Button } from "flowbite-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import CommentSection from "@/app/components/CommentSection";
 
 // Define the structure of a Post object
 interface Post {
@@ -108,6 +109,7 @@ const PostPage = async ({ params }: PostPageProps) => {
         className="p-3 max-w-2xl mx-auto w-full post-content"
         dangerouslySetInnerHTML={{ __html: post.content }}
       ></div>
+      <CommentSection slug={slug} />
       {/* Render the CallToAction component */}
       <div className="max-w-4xl mx-auto w-full">
         <CallToAction />
