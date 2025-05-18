@@ -109,7 +109,11 @@ const PostPage = async ({ params }: PostPageProps) => {
         className="p-3 max-w-2xl mx-auto w-full post-content"
         dangerouslySetInnerHTML={{ __html: post.content }}
       ></div>
-      <CommentSection postId={slug} />
+      {/* Correctly pass slug as postId */}
+      <section className="max-w-4xl mx-auto w-full mt-16">
+        <h2 className="text-2xl font-semibold mb-4">Comments</h2>
+        <CommentSection postId={slug} />
+      </section>
       {/* Render the CallToAction component */}
       <div className="max-w-4xl mx-auto w-full">
         <CallToAction />
