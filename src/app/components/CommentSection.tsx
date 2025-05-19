@@ -1,4 +1,4 @@
-// 4.2 Using in a Component - /src/components/CommentSection.tsx
+// /src/app/components/CommentSection.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,84 +7,105 @@ import {
   fetchPostComments,
   createComment,
   likeComment,
-} from "@/lib/actions/comments"; // only import used functions
-import { useUser } from "@clerk/nextjs";
+} from "@/lib/actions/comments";
+import { useUser, SignInButton } from "@clerk/nextjs";
 
 interface Props {
-  postId: string; // ID of the post for which comments are loaded
+  postId: string;
 }
 
 export default function CommentSection({ postId }: Props) {
   const [comments, setComments] = useState<IComment[]>([]);
   const [newContent, setNewContent] = useState("");
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser();
 
-  // Load comments on mount or when postId changes
+  // Load comments when the section mounts or postId changes
   useEffect(() => {
     fetchPostComments(postId)
-      .then((fetched) => setComments(fetched))
-      .catch((err: unknown) => {
-        console.error("Error fetching comments:", err);
-      });
+      .then(setComments)
+      .catch((err) => console.error("Error fetching comments:", err));
   }, [postId]);
 
-  // Create a new comment
+  // Handle posting a new comment
   const handleCreate = async () => {
     const content = newContent.trim();
     if (!content) return;
-
     try {
       const created = await createComment(postId, content);
       setComments((prev) => [created, ...prev]);
       setNewContent("");
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Failed to create comment:", err);
     }
   };
 
-  // Toggle like/unlike for a comment
+  // Handle like/unlike
   const handleLike = async (commentId: string) => {
     try {
       const updated = await likeComment(commentId);
       setComments((prev) =>
         prev.map((c) => (String(c._id) === commentId ? updated : c))
       );
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Failed to like comment:", err);
     }
   };
 
   return (
-    <div className="space-y-4">
-      {/* New comment input (only for signed-in users) */}
+    <div className="space-y-6">
+      {/* Sign‑in prompt */}
+      {!isSignedIn && (
+        <div className="text-center text-gray-400">
+          Please{" "}
+          <SignInButton mode="modal">
+            <button className="text-blue-500 underline">sign in</button>
+          </SignInButton>{" "}
+          to leave a comment.
+        </div>
+      )}
+
+      {/* New comment box */}
       {isSignedIn && (
         <div className="space-y-2">
           <textarea
             className="w-full border p-2 rounded"
+            placeholder="Write your comment..."
+            rows={3}
             value={newContent}
             onChange={(e) => setNewContent(e.target.value)}
-            placeholder="Write your comment..."
           />
-          <button
-            onClick={handleCreate}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Post comment
-          </button>
+          <div className="flex justify-end">
+            <button
+              onClick={handleCreate}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Post comment
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Render each comment */}
+      {/* Empty state */}
+      {comments.length === 0 && isSignedIn && (
+        <p className="text-center text-gray-500">No comments yet.</p>
+      )}
+
+      {/* Comments list */}
       {comments.map((c) => (
-        <div key={String(c._id)} className="border p-4 rounded shadow-sm">
+        <div
+          key={String(c._id)}
+          className="border p-4 rounded shadow-sm space-y-2"
+        >
           <p>{c.content}</p>
-          <button
-            onClick={() => handleLike(String(c._id))}
-            className="text-sm text-blue-500 hover:underline"
-          >
-            Like ({c.numberOfLikes})
-          </button>
-          {/* Future: edit/delete buttons if allowed */}
+          <div className="flex items-center space-x-4 text-sm">
+            <button
+              onClick={() => handleLike(String(c._id))}
+              className="text-blue-500 hover:underline"
+            >
+              Like ({c.numberOfLikes})
+            </button>
+            {/* future: edit/delete buttons */}
+          </div>
         </div>
       ))}
     </div>
