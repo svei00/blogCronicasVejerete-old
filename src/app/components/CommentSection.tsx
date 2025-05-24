@@ -69,12 +69,12 @@ export default function CommentSection({ postId }: Props) {
         <div className="flex items-center gap-2 text-sm text-gray-300">
           <Avatar
             img={user?.imageUrl} // Clerk's actual image URL prop
-            rounded
+            rounded={true}
             size="sm"
             className="border"
           />
           <span>
-            Signed in as <strong>@{user?.username}</strong>
+            Signed in as: <strong>@{user?.username}</strong>
           </span>
         </div>
       ) : (
