@@ -2,78 +2,81 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { IComment } from "@/lib/models/comment.model"; // Type definition for a comment
+import { IComment } from "@/lib/models/comment.model"; // Comment type
 import {
   fetchPostComments,
   createComment,
   likeComment,
-} from "@/lib/actions/comments"; // Utility functions for calling our API
-import { useUser, SignInButton } from "@clerk/nextjs"; // Clerk hooks & components
-import { Textarea, Button, Alert, Avatar } from "flowbite-react"; // Flowbite-React UI components
+} from "@/lib/actions/comments"; // API helper functions
+import { useUser, SignInButton } from "@clerk/nextjs"; // Clerk auth hooks
+import { Textarea, Button, Alert } from "flowbite-react"; // Flowbite UI components
 import { FaThumbsUp } from "react-icons/fa"; // Thumbs-up icon
 
 interface Props {
-  postId: string; // ID of the post whose comments we load
+  postId: string; // ID of the post to fetch comments for
 }
 
 export default function CommentSection({ postId }: Props) {
-  // Local component state
-  const [comments, setComments] = useState<IComment[]>([]); // Array of comments for this post
-  const [newContent, setNewContent] = useState(""); // Controlled textarea content
-  const [error, setError] = useState<string | null>(null); // Error message, if any
-  const { isSignedIn, user } = useUser(); // Clerk authentication state
+  // Component state
+  const [comments, setComments] = useState<IComment[]>([]); // Loaded comments
+  const [newContent, setNewContent] = useState(""); // New comment text
+  const [error, setError] = useState<string | null>(null); // Error message
+  const { isSignedIn, user } = useUser(); // Clerk auth state
 
-  // Fetch existing comments on mount or whenever postId changes
+  // Load comments on mount / postId change
   useEffect(() => {
     fetchPostComments(postId)
-      .then(setComments) // Populate state on success
+      .then(setComments) // On success, store comments
       .catch((err) => {
-        console.error("Error fetching comments:", err); // Log & set error on failure
+        console.error("Error fetching comments:", err);
         setError("Failed to load comments.");
       });
   }, [postId]);
 
-  // Handler for posting a new comment
+  // Submit a new comment
   const handleSubmit = async () => {
     const content = newContent.trim();
-    if (!content) return; // Don’t submit empty content
+    if (!content) return; // Ignore empty submissions
 
     try {
-      const created = await createComment(postId, content); // Call backend
+      const created = await createComment(postId, content); // Call API
       setComments((prev) => [created, ...prev]); // Prepend new comment
       setNewContent(""); // Clear textarea
-      setError(null); // Clear any previous error
+      setError(null); // Clear previous errors
     } catch (err) {
-      console.error("Failed to create comment:", err); // Log & surface error
+      console.error("Failed to create comment:", err);
       setError("Could not post comment.");
     }
   };
 
-  // Handler for like/unlike toggling
+  // Toggle like/unlike a comment
   const handleLike = async (commentId: string) => {
     try {
-      const updated = await likeComment(commentId); // Toggle like in backend
+      const updated = await likeComment(commentId); // Call API
       setComments((prev) =>
         prev.map((c) => (String(c._id) === commentId ? updated : c))
-      ); // Update that single comment
+      ); // Replace the liked comment in state
     } catch (err) {
-      console.error("Failed to like comment:", err); // Log & surface error
+      console.error("Failed to like comment:", err);
       setError("Could not update like.");
     }
   };
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6 border border-gray-700 rounded-lg">
-      {/* Signed-in header or sign-in prompt */}
+      {/* Signed-in header or prompt to sign in */}
       {isSignedIn ? (
-        <div className="flex items-center gap-2 text-sm text-gray-300">
-          <Avatar
-            img={user?.imageUrl} // Clerk's actual image URL prop
-            rounded={true}
-            size="sm"
-            className="border"
-          />
-          <span>
+        <div className="flex items-center gap-2 text-sm">
+          {/* Circular avatar */}
+          <div className="w-6 h-6 rounded-full overflow-hidden border border-gray-500">
+            <img
+              src={user?.imageUrl || "/default-avatar.png"} // Fallback to default if missing
+              alt="User avatar"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          {/* Label with colon */}
+          <span className="text-gray-300">
             Signed in as: <strong>@{user?.username}</strong>
           </span>
         </div>
@@ -87,17 +90,18 @@ export default function CommentSection({ postId }: Props) {
         </div>
       )}
 
-      {/* New comment form (only for signed-in users) */}
+      {/* New comment form (only when signed in) */}
       {isSignedIn && (
         <div className="space-y-2">
           <Textarea
             placeholder="Write a comment..."
             rows={3}
             maxLength={1000}
-            value={newContent} // Controlled component
+            value={newContent} // Controlled textarea
             onChange={(e) => setNewContent(e.target.value)} // Update on input
           />
           <div className="flex justify-between items-center">
+            {/* Character counter */}
             <p className="text-xs text-gray-500">
               {(1000 - newContent.length).toLocaleString()} characters left
             </p>
@@ -108,28 +112,31 @@ export default function CommentSection({ postId }: Props) {
         </div>
       )}
 
-      {/* Error alert */}
+      {/* Show error alert if any */}
       {error && <Alert color="failure">{error}</Alert>}
 
-      {/* Empty state */}
+      {/* Empty state when no comments */}
       {comments.length === 0 && !error && (
         <p className="text-center text-gray-500">No comments yet!</p>
       )}
 
-      {/* Comments list */}
+      {/* Render list of comments */}
       <div className="space-y-4">
         {comments.map((c) => (
           <div
-            key={String(c._id)} // Unique key per comment
+            key={String(c._id)}
             className="border border-gray-600 rounded-lg p-4"
           >
+            {/* Comment text */}
             <p className="mb-2">{c.content}</p>
+            {/* Like button with icon and count */}
             <div className="flex items-center space-x-4 text-sm text-gray-400">
               <button
-                onClick={() => handleLike(String(c._id))} // Like toggle button
+                onClick={() => handleLike(String(c._id))}
                 className="flex items-center gap-1 hover:text-blue-400"
               >
-                <FaThumbsUp /> {c.numberOfLikes}
+                <FaThumbsUp />
+                {c.numberOfLikes}
               </button>
             </div>
           </div>
