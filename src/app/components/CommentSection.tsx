@@ -11,6 +11,7 @@ import {
 import { useUser, SignInButton } from "@clerk/nextjs"; // Clerk auth hooks
 import { Textarea, Button, Alert } from "flowbite-react"; // Flowbite UI components
 import { FaThumbsUp } from "react-icons/fa"; // Thumbs-up icon
+import Link from "next/link"; // Next.js Link component
 
 interface Props {
   postId: string; // ID of the post to fetch comments for
@@ -66,20 +67,21 @@ export default function CommentSection({ postId }: Props) {
     <div className="max-w-2xl mx-auto p-4 space-y-6 border border-gray-700 rounded-lg">
       {/* Signed-in header or prompt to sign in */}
       {isSignedIn ? (
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-1 my-5 text-gray-500 text-sm">
           {/* Label with colon */}
-          <span className="text-gray-300">
-            Signed in as:
-            {/* Circular avatar */}
-            <div className="w-6 h-6 rounded-full overflow-hidden border border-gray-500">
-              <img
-                src={user?.imageUrl || "/default-avatar.png"} // Fallback to default if missing
-                alt="User avatar"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <strong>@{user?.username}</strong>
-          </span>
+          <p>Signed in as:</p>
+          {/* Circular avatar */}
+          <img
+            className="h-5 w-5 object-cover rounded-full"
+            src={user?.imageUrl || "/default-avatar.png"} // Avatar URL
+            alt={user?.username || "avatar"} // Alt text
+          />
+          <Link
+            href="/dashboard?tab=profile" // Clerk user dashboard
+            className="text-xs text-blueEx hover:text-greenEx"
+          >
+            @{user?.username}
+          </Link>
         </div>
       ) : (
         <div className="text-sm text-gray-400">
