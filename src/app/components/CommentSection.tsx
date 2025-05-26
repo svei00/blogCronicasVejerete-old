@@ -67,17 +67,18 @@ export default function CommentSection({ postId }: Props) {
       {/* Signed-in header or prompt to sign in */}
       {isSignedIn ? (
         <div className="flex items-center gap-2 text-sm">
-          {/* Circular avatar */}
-          <div className="w-6 h-6 rounded-full overflow-hidden border border-gray-500">
-            <img
-              src={user?.imageUrl || "/default-avatar.png"} // Fallback to default if missing
-              alt="User avatar"
-              className="w-full h-full object-cover"
-            />
-          </div>
           {/* Label with colon */}
           <span className="text-gray-300">
-            Signed in as: <strong>@{user?.username}</strong>
+            Signed in as:
+            {/* Circular avatar */}
+            <div className="w-6 h-6 rounded-full overflow-hidden border border-gray-500">
+              <img
+                src={user?.imageUrl || "/default-avatar.png"} // Fallback to default if missing
+                alt="User avatar"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <strong>@{user?.username}</strong>
           </span>
         </div>
       ) : (
