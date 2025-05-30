@@ -12,6 +12,7 @@ import { useUser, SignInButton } from "@clerk/nextjs"; // Clerk auth hooks
 import { Textarea, Button, Alert } from "flowbite-react"; // Flowbite UI components
 import { FaThumbsUp } from "react-icons/fa"; // Thumbs-up icon
 import Link from "next/link"; // Next.js Link component
+import Image from "next/image"; // Next.js optimized image
 
 interface Props {
   postId: string; // ID of the post to fetch comments for
@@ -71,11 +72,16 @@ export default function CommentSection({ postId }: Props) {
           {/* Label with colon */}
           <p>Signed in as:</p>
           {/* Circular avatar */}
-          <img
-            className="h-5 w-5 object-cover rounded-full"
-            src={user?.imageUrl || "/default-avatar.png"} // Avatar URL
-            alt={user?.username || "avatar"} // Alt text
-          />
+          <div className="relative h-5 w-5 rounded-full overflow-hidden">
+            <Image
+              src={user?.imageUrl || "/default-avatar.png"} // Avatar URL
+              alt={user?.username || "avatar"} // Alt text
+              fill // fill the parent div
+              className="object-cover" // behave like object-cover
+              sizes="20px" // responsive image size
+            />
+          </div>
+          {/* Link to user profile in Clerk dashboard */}
           <Link
             href="/dashboard?tab=profile" // Clerk user dashboard
             className="text-xs text-blueEx hover:text-greenEx"
