@@ -84,7 +84,7 @@ export default function CommentSection({ postId }: Props) {
           {/* Link to user profile in Clerk dashboard */}
           <Link
             href="/dashboard?tab=profile" // Clerk user dashboard
-            className="text-xs text-blueEx hover:text-greenEx"
+            className="text-xs text-purple-500 hover:text-orange-500"
           >
             @{user?.username}
           </Link>

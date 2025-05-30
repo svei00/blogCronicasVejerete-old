@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
         hostname: "upload.wikimedia.org",
         pathname: "/**",
       },
+       {
+        protocol: "https",
+        // Clerk’s default image host; if yours differs, replace it:
+        hostname: "images.clerk.dev",
+        pathname: "/**",
+      },
     ],
   },
   webpack: (config) => {
