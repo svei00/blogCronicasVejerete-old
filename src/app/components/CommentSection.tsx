@@ -74,8 +74,8 @@ export default function CommentSection({ postId }: Props) {
           {/* Circular avatar */}
           <div className="relative h-5 w-5 rounded-full overflow-hidden">
             <Image
-              src={user?.imageUrl || "/default-avatar.png"} // Avatar URL
-              alt={user?.username || "avatar"} // Alt text
+              src={user.imageUrl || "/default-avatar.png"} // Avatar URL
+              alt={user.username || "avatar"} // Alt text
               fill // fill the parent div
               className="object-cover" // behave like object-cover
               sizes="20px" // responsive image size
