@@ -74,8 +74,8 @@ export default function CommentSection({ postId }: Props) {
           {/* Circular avatar */}
           <div className="relative h-5 w-5 rounded-full overflow-hidden">
             <Image
-              src={user.imageUrl || "/default-avatar.png"} // Avatar URL
-              alt={user.username || "avatar"} // Alt text
+              src={user?.imageUrl || "/default-avatar.png"} // Avatar URL
+              alt={user?.username || "avatar"} // Alt text
               fill // fill the parent div
               className="object-cover" // behave like object-cover
               sizes="20px" // responsive image size
@@ -114,8 +114,12 @@ export default function CommentSection({ postId }: Props) {
             <p className="text-xs text-gray-500">
               {(1000 - newContent.length).toLocaleString()} characters left
             </p>
-            <Button onClick={handleSubmit} disabled={!newContent.trim()}>
-              Submit
+            <Button
+              onClick={handleSubmit}
+              disabled={!newContent.trim()}
+              gradientDuoTone="purpleToPink"
+            >
+              Comment
             </Button>
           </div>
         </div>
