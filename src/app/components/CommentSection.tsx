@@ -1,90 +1,158 @@
-// /src/app/components/CommentSection.tsx
+// File: /src/app/components/CommentSection.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import { IComment } from "@/lib/models/comment.model"; // Comment type
+import { IComment } from "@/lib/models/comment.model"; // Your Mongoose‐backed TS interface
 import {
   fetchPostComments,
   createComment,
   likeComment,
-} from "@/lib/actions/comments"; // API helper functions
-import { useUser, SignInButton } from "@clerk/nextjs"; // Clerk auth hooks
-import { Textarea, Button, Alert } from "flowbite-react"; // Flowbite UI components
-import { FaThumbsUp } from "react-icons/fa"; // Thumbs-up icon
-import Link from "next/link"; // Next.js Link component
+  editComment as apiEditComment,
+  deleteComment as apiDeleteComment,
+} from "@/lib/actions/comments"; // Your “actions” for calling /api/comments/*
+import { useUser, SignInButton } from "@clerk/nextjs"; // Clerk for authentication
+import { Textarea, Button, Alert, Modal, Avatar } from "flowbite-react"; // Flowbite UI components
+import { FaThumbsUp, FaEdit, FaTrash } from "react-icons/fa"; // Icons for Like/Edit/Delete
 import Image from "next/image"; // Next.js optimized image
+import Link from "next/link"; // Next.js link
+import { formatDistanceToNow } from "date-fns"; // For “time ago” formatting
 
-interface Props {
-  postId: string; // ID of the post to fetch comments for
+interface CommentSectionProps {
+  postId: string;
 }
 
-export default function CommentSection({ postId }: Props) {
-  // Component state
-  const [comments, setComments] = useState<IComment[]>([]); // Loaded comments
-  const [newContent, setNewContent] = useState(""); // New comment text
-  const [error, setError] = useState<string | null>(null); // Error message
-  const { isSignedIn, user } = useUser(); // Clerk auth state
+// Extend IComment if you returned additional fields from the API (e.g. authorUsername, authorImageUrl):
+export interface ICommentWithUser extends IComment {
+  authorUsername: string;
+  authorImageUrl: string;
+  createdAt: string | Date;
+}
 
-  // Load comments on mount / postId change
+export default function CommentSection({ postId }: CommentSectionProps) {
+  // Local state
+  const [comments, setComments] = useState<ICommentWithUser[]>([]);
+  const [newContent, setNewContent] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+
+  // Clerk’s user object
+  const { isSignedIn, user } = useUser();
+
+  // 1) Fetch comments whenever `postId` changes
   useEffect(() => {
-    fetchPostComments(postId)
-      .then(setComments) // On success, store comments
-      .catch((err) => {
+    const loadComments = async () => {
+      try {
+        const fetched: ICommentWithUser[] = await fetchPostComments(postId);
+        setComments(fetched);
+      } catch (err) {
         console.error("Error fetching comments:", err);
         setError("Failed to load comments.");
-      });
+      }
+    };
+    loadComments();
   }, [postId]);
 
-  // Submit a new comment
+  // 2) Submit a brand-new comment
   const handleSubmit = async () => {
     const content = newContent.trim();
-    if (!content) return; // Ignore empty submissions
+    if (!content) return;
 
     try {
-      const created = await createComment(postId, content); // Call API
-      setComments((prev) => [created, ...prev]); // Prepend new comment
-      setNewContent(""); // Clear textarea
-      setError(null); // Clear previous errors
+      const created: ICommentWithUser = await createComment(postId, content);
+      // Prepend new comment to the list
+      setComments((prev) => [created, ...prev]);
+      setNewContent("");
+      setError(null);
     } catch (err) {
       console.error("Failed to create comment:", err);
       setError("Could not post comment.");
     }
   };
 
-  // Toggle like/unlike a comment
+  // 3) Toggle like/unlike on a comment
   const handleLike = async (commentId: string) => {
     try {
-      const updated = await likeComment(commentId); // Call API
+      const updated: ICommentWithUser = await likeComment(commentId);
       setComments((prev) =>
-        prev.map((c) => (String(c._id) === commentId ? updated : c))
-      ); // Replace the liked comment in state
+        prev.map((c) => (c._id === commentId ? updated : c))
+      );
     } catch (err) {
       console.error("Failed to like comment:", err);
       setError("Could not update like.");
     }
   };
 
+  // 4) Edit a comment’s content (inline)
+  const handleEdit = async (commentId: string, newText: string) => {
+    try {
+      const updated: ICommentWithUser = await apiEditComment(
+        commentId,
+        newText
+      );
+      setComments((prev) =>
+        prev.map((c) => (c._id === commentId ? updated : c))
+      );
+    } catch (err) {
+      console.error("Failed to edit comment:", err);
+      setError("Could not edit comment.");
+    }
+  };
+
+  // 5) Delete a comment (with confirmation modal)
+  const confirmDelete = (commentId: string) => {
+    setShowModal(true);
+    setCommentToDelete(commentId);
+  };
+
+  const handleDelete = async () => {
+    if (!commentToDelete) return;
+    try {
+      await apiDeleteComment(commentToDelete);
+      setComments((prev) => prev.filter((c) => c._id !== commentToDelete));
+      setShowModal(false);
+      setCommentToDelete(null);
+    } catch (err) {
+      console.error("Failed to delete comment:", err);
+      setError("Could not delete comment.");
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6 border border-gray-700 rounded-lg">
-      {/* Signed-in header or prompt to sign in */}
+      {/* ———————————————————————————————————————————————————— */}
+      {/* HEADER: If signed in, show avatar + “Signed in as” + username.
+          If not signed in, prompt to sign in. */}
       {isSignedIn ? (
-        <div className="flex items-center gap-1 my-5 text-gray-500 text-sm">
-          {/* Label with colon */}
+        <div className="flex items-center gap-2 text-sm text-gray-300">
           <p>Signed in as:</p>
-          {/* Circular avatar */}
-          <div className="relative h-5 w-5 rounded-full overflow-hidden">
-            <Image
-              src={user?.imageUrl || "/default-avatar.png"} // Avatar URL
-              alt={user?.username || "avatar"} // Alt text
-              fill // fill the parent div
-              className="object-cover" // behave like object-cover
-              sizes="20px" // responsive image size
-            />
+
+          {/* Circular avatar (using Next/Image for optimization) */}
+          <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
+            {user?.imageUrl ? (
+              <Image
+                src={user.imageUrl}
+                alt={user.username || "avatar"}
+                fill
+                className="object-cover"
+                sizes="24px"
+              />
+            ) : (
+              // Fallback to a default avatar
+              <Image
+                src="/default-avatar.png"
+                alt="Default avatar"
+                fill
+                className="object-cover"
+                sizes="24px"
+              />
+            )}
           </div>
-          {/* Link to user profile in Clerk dashboard */}
+
+          {/* Username links to user’s Clerk dashboard (or whatever) */}
           <Link
-            href="/dashboard?tab=profile" // Clerk user dashboard
-            className="text-xs text-purple-500 hover:text-orange-500"
+            href="/dashboard?tab=profile"
+            className="text-xs text-purple-400 hover:text-orange-400"
           >
             @{user?.username}
           </Link>
@@ -99,62 +167,165 @@ export default function CommentSection({ postId }: Props) {
         </div>
       )}
 
-      {/* New comment form (only when signed in) */}
+      {/* ———————————————————————————————————————————————————— */}
+      {/* NEW COMMENT FORM: only show if user is signed in */}
       {isSignedIn && (
         <div className="space-y-2">
           <Textarea
             placeholder="Write a comment..."
             rows={3}
             maxLength={1000}
-            value={newContent} // Controlled textarea
-            onChange={(e) => setNewContent(e.target.value)} // Update on input
+            value={newContent}
+            onChange={(e) => setNewContent(e.target.value)}
           />
           <div className="flex justify-between items-center">
-            {/* Character counter */}
             <p className="text-xs text-gray-500">
               {(1000 - newContent.length).toLocaleString()} characters left
             </p>
-            <Button
-              onClick={handleSubmit}
-              disabled={!newContent.trim()}
-              gradientDuoTone="purpleToPink"
-            >
-              Comment
+            <Button onClick={handleSubmit} disabled={!newContent.trim()}>
+              Submit
             </Button>
           </div>
         </div>
       )}
 
-      {/* Show error alert if any */}
+      {/* ———————————————————————————————————————————————————— */}
+      {/* ERROR ALERT: show if something went wrong */}
       {error && <Alert color="failure">{error}</Alert>}
 
-      {/* Empty state when no comments */}
-      {comments.length === 0 && !error && (
-        <p className="text-center text-gray-500">No comments yet!</p>
-      )}
+      {/* ———————————————————————————————————————————————————— */}
+      {/* COMMENT COUNT + LIST: */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <p className="text-sm text-gray-300">Comments:</p>
+          <div className="border border-green-400 text-green-400 py-1 px-2 rounded-sm text-xs">
+            {comments.length}
+          </div>
+        </div>
 
-      {/* Render list of comments */}
-      <div className="space-y-4">
-        {comments.map((c) => (
-          <div
-            key={String(c._id)}
-            className="border border-gray-600 rounded-lg p-4"
-          >
-            {/* Comment text */}
-            <p className="mb-2">{c.content}</p>
-            {/* Like button with icon and count */}
-            <div className="flex items-center space-x-4 text-sm text-gray-400">
-              <button
-                onClick={() => handleLike(String(c._id))}
-                className="flex items-center gap-1 hover:text-blue-400"
-              >
-                <FaThumbsUp />
-                {c.numberOfLikes}
-              </button>
+        {comments.length === 0 && !error ? (
+          <p className="text-center text-gray-400">No comments yet!</p>
+        ) : (
+          <div className="space-y-4">
+            {comments.map((c) => {
+              // Determine if the current user is the author of this comment:
+              const isAuthor = isSignedIn && user?.id === c.userId;
+
+              return (
+                <div
+                  key={c._id}
+                  className="border border-gray-600 rounded-lg p-4 space-y-2"
+                >
+                  <div className="flex items-start justify-between">
+                    {/* AVATAR + USERNAME + TIMESTAMP */}
+                    <div className="flex items-center gap-2">
+                      <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
+                        {c.authorImageUrl ? (
+                          <Image
+                            src={c.authorImageUrl}
+                            alt={c.authorUsername}
+                            fill
+                            className="object-cover"
+                            sizes="24px"
+                          />
+                        ) : (
+                          <Image
+                            src="/default-avatar.png"
+                            alt="Default avatar"
+                            fill
+                            className="object-cover"
+                            sizes="24px"
+                          />
+                        )}
+                      </div>
+                      <div className="flex flex-col leading-tight">
+                        <span className="text-xs font-semibold text-gray-100">
+                          @{c.authorUsername}
+                        </span>
+                        <span className="text-2xs text-gray-400">
+                          {formatDistanceToNow(new Date(c.createdAt), {
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* If the viewer is the author, show “Edit” + “Delete” buttons */}
+                    {isAuthor && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const newText = prompt(
+                              "Edit your comment:",
+                              c.content
+                            );
+                            if (
+                              newText !== null &&
+                              newText.trim() !== "" &&
+                              newText.trim() !== c.content
+                            ) {
+                              handleEdit(c._id, newText.trim());
+                            }
+                          }}
+                          className="text-sm text-yellow-400 hover:text-yellow-600"
+                        >
+                          <FaEdit /> Edit
+                        </button>
+                        <button
+                          onClick={() => confirmDelete(c._id)}
+                          className="text-sm text-red-400 hover:text-red-600"
+                        >
+                          <FaTrash /> Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* COMMENT TEXT */}
+                  <p className="text-gray-200">{c.content}</p>
+
+                  {/* LIKE BUTTON + COUNT */}
+                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <button
+                      onClick={() => handleLike(c._id)}
+                      className="flex items-center gap-1 hover:text-blue-400"
+                    >
+                      <FaThumbsUp />
+                      <span>{c.numberOfLikes}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ———————————————————————————————————————————————————— */}
+      {/* DELETE CONFIRMATION MODAL */}
+      <Modal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+        popup
+        size="md"
+      >
+        <Modal.Header />
+        <Modal.Body>
+          <div className="text-center">
+            <p className="mb-5 text-lg text-gray-500">
+              Are you sure you want to delete this comment?
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button color="failure" onClick={handleDelete}>
+                Yes, delete it
+              </Button>
+              <Button color="gray" onClick={() => setShowModal(false)}>
+                No, cancel
+              </Button>
             </div>
           </div>
-        ))}
-      </div>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 }
