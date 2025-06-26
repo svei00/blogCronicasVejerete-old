@@ -2,26 +2,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { IComment } from "@/lib/models/comment.model"; // Your Mongoose‐backed TS interface
+import { IComment } from "@/lib/models/comment.model";
 import {
   fetchPostComments,
   createComment,
   likeComment,
   editComment as apiEditComment,
   deleteComment as apiDeleteComment,
-} from "@/lib/actions/comments"; // Your “actions” for calling /api/comments/*
-import { useUser, SignInButton } from "@clerk/nextjs"; // Clerk for authentication
-import { Textarea, Button, Alert, Modal, Avatar } from "flowbite-react"; // Flowbite UI components
-import { FaThumbsUp, FaEdit, FaTrash } from "react-icons/fa"; // Icons for Like/Edit/Delete
-import Image from "next/image"; // Next.js optimized image
-import Link from "next/link"; // Next.js link
-import { formatDistanceToNow } from "date-fns"; // For “time ago” formatting
+} from "@/lib/actions/comments";
+import { useUser, SignInButton } from "@clerk/nextjs";
+import { Textarea, Button, Alert, Modal } from "flowbite-react";
+import { FaThumbsUp, FaEdit, FaTrash } from "react-icons/fa";
+import Image from "next/image";
+import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
 
 interface CommentSectionProps {
   postId: string;
 }
 
-// Extend IComment if you returned additional fields from the API (e.g. authorUsername, authorImageUrl):
 export interface ICommentWithUser extends IComment {
   authorUsername: string;
   authorImageUrl: string;
@@ -29,17 +28,14 @@ export interface ICommentWithUser extends IComment {
 }
 
 export default function CommentSection({ postId }: CommentSectionProps) {
-  // Local state
   const [comments, setComments] = useState<ICommentWithUser[]>([]);
   const [newContent, setNewContent] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
 
-  // Clerk’s user object
   const { isSignedIn, user } = useUser();
 
-  // 1) Fetch comments whenever `postId` changes
   useEffect(() => {
     const loadComments = async () => {
       try {
@@ -53,14 +49,12 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     loadComments();
   }, [postId]);
 
-  // 2) Submit a brand-new comment
   const handleSubmit = async () => {
     const content = newContent.trim();
     if (!content) return;
 
     try {
       const created: ICommentWithUser = await createComment(postId, content);
-      // Prepend new comment to the list
       setComments((prev) => [created, ...prev]);
       setNewContent("");
       setError(null);
@@ -70,7 +64,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
-  // 3) Toggle like/unlike on a comment
   const handleLike = async (commentId: string) => {
     try {
       const updated: ICommentWithUser = await likeComment(commentId);
@@ -83,7 +76,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
-  // 4) Edit a comment’s content (inline)
   const handleEdit = async (commentId: string, newText: string) => {
     try {
       const updated: ICommentWithUser = await apiEditComment(
@@ -99,7 +91,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
-  // 5) Delete a comment (with confirmation modal)
   const confirmDelete = (commentId: string) => {
     setShowModal(true);
     setCommentToDelete(commentId);
@@ -120,36 +111,18 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6 border border-gray-700 rounded-lg">
-      {/* ———————————————————————————————————————————————————— */}
-      {/* HEADER: If signed in, show avatar + “Signed in as” + username.
-          If not signed in, prompt to sign in. */}
       {isSignedIn ? (
         <div className="flex items-center gap-2 text-sm text-gray-300">
           <p>Signed in as:</p>
-
-          {/* Circular avatar (using Next/Image for optimization) */}
           <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
-            {user?.imageUrl ? (
-              <Image
-                src={user.imageUrl}
-                alt={user.username || "avatar"}
-                fill
-                className="object-cover"
-                sizes="24px"
-              />
-            ) : (
-              // Fallback to a default avatar
-              <Image
-                src="/default-avatar.png"
-                alt="Default avatar"
-                fill
-                className="object-cover"
-                sizes="24px"
-              />
-            )}
+            <Image
+              src={user?.imageUrl || "/default-avatar.png"}
+              alt={user?.username || "avatar"}
+              fill
+              className="object-cover"
+              sizes="24px"
+            />
           </div>
-
-          {/* Username links to user’s Clerk dashboard (or whatever) */}
           <Link
             href="/dashboard?tab=profile"
             className="text-xs text-purple-400 hover:text-orange-400"
@@ -167,8 +140,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         </div>
       )}
 
-      {/* ———————————————————————————————————————————————————— */}
-      {/* NEW COMMENT FORM: only show if user is signed in */}
       {isSignedIn && (
         <div className="space-y-2">
           <Textarea
@@ -189,12 +160,8 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         </div>
       )}
 
-      {/* ———————————————————————————————————————————————————— */}
-      {/* ERROR ALERT: show if something went wrong */}
       {error && <Alert color="failure">{error}</Alert>}
 
-      {/* ———————————————————————————————————————————————————— */}
-      {/* COMMENT COUNT + LIST: */}
       <div>
         <div className="flex items-center gap-2 mb-4">
           <p className="text-sm text-gray-300">Comments:</p>
@@ -208,7 +175,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         ) : (
           <div className="space-y-4">
             {comments.map((c) => {
-              // Determine if the current user is the author of this comment:
               const isAuthor = isSignedIn && user?.id === c.userId;
 
               return (
@@ -217,26 +183,15 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                   className="border border-gray-600 rounded-lg p-4 space-y-2"
                 >
                   <div className="flex items-start justify-between">
-                    {/* AVATAR + USERNAME + TIMESTAMP */}
                     <div className="flex items-center gap-2">
                       <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
-                        {c.authorImageUrl ? (
-                          <Image
-                            src={c.authorImageUrl}
-                            alt={c.authorUsername}
-                            fill
-                            className="object-cover"
-                            sizes="24px"
-                          />
-                        ) : (
-                          <Image
-                            src="/default-avatar.png"
-                            alt="Default avatar"
-                            fill
-                            className="object-cover"
-                            sizes="24px"
-                          />
-                        )}
+                        <Image
+                          src={c.authorImageUrl || "/default-avatar.png"}
+                          alt={c.authorUsername}
+                          fill
+                          className="object-cover"
+                          sizes="24px"
+                        />
                       </div>
                       <div className="flex flex-col leading-tight">
                         <span className="text-xs font-semibold text-gray-100">
@@ -250,7 +205,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                       </div>
                     </div>
 
-                    {/* If the viewer is the author, show “Edit” + “Delete” buttons */}
                     {isAuthor && (
                       <div className="flex items-center gap-2">
                         <button
@@ -260,8 +214,8 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                               c.content
                             );
                             if (
-                              newText !== null &&
-                              newText.trim() !== "" &&
+                              newText &&
+                              newText.trim() &&
                               newText.trim() !== c.content
                             ) {
                               handleEdit(c._id, newText.trim());
@@ -281,10 +235,8 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                     )}
                   </div>
 
-                  {/* COMMENT TEXT */}
                   <p className="text-gray-200">{c.content}</p>
 
-                  {/* LIKE BUTTON + COUNT */}
                   <div className="flex items-center gap-2 text-sm text-gray-400">
                     <button
                       onClick={() => handleLike(c._id)}
@@ -301,8 +253,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         )}
       </div>
 
-      {/* ———————————————————————————————————————————————————— */}
-      {/* DELETE CONFIRMATION MODAL */}
       <Modal
         show={showModal}
         onClose={() => setShowModal(false)}
