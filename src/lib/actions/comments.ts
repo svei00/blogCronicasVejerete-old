@@ -1,11 +1,12 @@
 // /src/lib/actions/comments.ts
 
-import { IComment } from "@/lib/models/comment.model";
+import { ICommentWithUser } from "@/app/components/CommentSection"; //<-- Import correct type
 
 /**
  * Fetch all comments for a given post.
+ * Returns enriched ICommentWithUser objects with author info.
  */
-export async function fetchPostComments(postId: string): Promise<IComment[]> {
+export async function fetchPostComments(postId: string): Promise<ICommentWithUser[]> {
   const res = await fetch(`/api/comments/getPostComments/${postId}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch comments (status ${res.status})`);
@@ -15,11 +16,12 @@ export async function fetchPostComments(postId: string): Promise<IComment[]> {
 
 /**
  * Create a new comment on a post.
+ * Returns the newly created enriched ICommentWithUser.
  */
 export async function createComment(
   postId: string,
   content: string
-): Promise<IComment> {
+): Promise<ICommentWithUser> {
   const res = await fetch(`/api/comments/create`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -33,8 +35,9 @@ export async function createComment(
 
 /**
  * Toggle like/unlike on a comment.
+ * Returns the updated enriched ICommentWithUser.
  */
-export async function likeComment(commentId: string): Promise<IComment> {
+export async function likeComment(commentId: string): Promise<ICommentWithUser> {
   const res = await fetch(`/api/comments/likeComment/${commentId}`, {
     method: "PUT",
   });
@@ -46,11 +49,12 @@ export async function likeComment(commentId: string): Promise<IComment> {
 
 /**
  * Edit an existing comment.
+ * Returns the updated enriched ICommentWithUser.
  */
 export async function editComment(
   commentId: string,
   content: string
-): Promise<IComment> {
+): Promise<ICommentWithUser> {
   const res = await fetch(`/api/comments/editComment/${commentId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -64,6 +68,7 @@ export async function editComment(
 
 /**
  * Delete a comment.
+ * This usually returns a simple status or success object.
  */
 export async function deleteComment(commentId: string): Promise<unknown> {
   const res = await fetch(`/api/comments/deleteComment/${commentId}`, {
