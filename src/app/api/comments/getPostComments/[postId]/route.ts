@@ -1,5 +1,4 @@
 // /src/app/api/comments/getPostComments/[postId]/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/lib/mongodb/mongoose";
 import Comment from "@/lib/models/comment.model";
@@ -9,27 +8,55 @@ import Comment from "@/lib/models/comment.model";
  *  
  * Since Next.js 15 no longer accepts a typed `context` parameter for route handlers,
  * we extract the dynamic `[postId]` segment from request.nextUrl.pathname.
+ * This route retrieves all comments for a given post, including the author's
+ * username and profile image, and returns them in a format expected by the frontend.
  */
 export async function GET(request: NextRequest) {
-  // 1. Ensure our MongoDB client is connected.
+  // 1. Connect to the MongoDB database
   await connect();
 
   try {
-    // 2. Extract the postId from the URL path:
-    //    e.g. pathname === "/api/comments/getPostComments/abcd1234"
+    // 2. Extract the postId from the request URL
     const parts = request.nextUrl.pathname.split("/");
     const postId = parts[parts.length - 1];
 
-    // 3. Query the Comment model for this postId, newest first.
+    // 3. Define the expected shape of populated comments
+    interface PopulatedComment {
+      _id: string;
+      postId: string;
+      content: string;
+      userId: {
+        _id: string;
+        username?: string;
+        profilePicture?: string;
+      };
+      likes?: string[];
+      createdAt: Date;
+    }
+
+    // 4. Fetch comments with populated user info
     const comments = await Comment.find({ postId })
       .sort({ createdAt: -1 })
-      .lean(); // returns plain JS objects
+      .populate("userId", "username profilePicture")
+      .lean<PopulatedComment[]>();
 
-    // 4. Return the array of comments as JSON.
-    return NextResponse.json(comments, { status: 200 });
+    // 5. Map to the ICommentWithUser format expected by frontend
+    const mapped = comments.map((c) => ({
+      _id: c._id.toString(),
+      postId: c.postId.toString(),
+      content: c.content,
+      userId: c.userId._id.toString(),
+      numberOfLikes: Array.isArray(c.likes) ? c.likes.length : 0,
+      likes: (c.likes || []).map((id) => id.toString()),
+      createdAt: c.createdAt,
+      authorUsername: c.userId.username || "anonymous",
+      authorImageUrl: c.userId.profilePicture || "/default-avatar.png",
+    }));
+
+    // 6. Return response
+    return NextResponse.json(mapped, { status: 200 });
   } catch (err: unknown) {
-    // 5. Handle any errors cleanly.
-    const message = err instanceof Error ? err.message : "Server error";
+    const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ message }, { status: 500 });
   }
 }
