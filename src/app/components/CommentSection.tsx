@@ -175,7 +175,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         ) : (
           <div className="space-y-4">
             {comments.map((c) => {
-              const isAuthor = isSignedIn && user?.id === c.userId;
+              const isAuthor = isSignedIn && user?.id === String(c.userId);
 
               return (
                 <div
