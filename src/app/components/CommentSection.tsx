@@ -1,4 +1,4 @@
-// File: /src/app/components/CommentSection.tsx
+// /src/app/components/CommentSection.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,8 +7,8 @@ import {
   fetchPostComments,
   createComment,
   likeComment,
-  editComment as apiEditComment,
-  deleteComment as apiDeleteComment,
+  editComment,
+  deleteComment,
 } from "@/lib/actions/comments";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { Textarea, Button, Alert, Modal } from "flowbite-react";
@@ -21,25 +21,29 @@ interface CommentSectionProps {
   postId: string;
 }
 
+// Extends IComment with author data for frontend rendering
 export interface ICommentWithUser extends IComment {
   authorUsername: string;
   authorImageUrl: string;
-  createdAt: string | Date;
 }
 
+// Component begins here
 export default function CommentSection({ postId }: CommentSectionProps) {
+  // State for comments, new comment input, errors, and delete modal
   const [comments, setComments] = useState<ICommentWithUser[]>([]);
   const [newContent, setNewContent] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
 
+  // Clerk authentication
   const { isSignedIn, user } = useUser();
 
+  // Load comments on mount or when postId changes
   useEffect(() => {
     const loadComments = async () => {
       try {
-        const fetched: ICommentWithUser[] = await fetchPostComments(postId);
+        const fetched = await fetchPostComments(postId);
         setComments(fetched);
       } catch (err) {
         console.error("Error fetching comments:", err);
@@ -49,12 +53,12 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     loadComments();
   }, [postId]);
 
+  // Handle new comment submission
   const handleSubmit = async () => {
     const content = newContent.trim();
     if (!content) return;
-
     try {
-      const created: ICommentWithUser = await createComment(postId, content);
+      const created = await createComment(postId, content);
       setComments((prev) => [created, ...prev]);
       setNewContent("");
       setError(null);
@@ -64,9 +68,10 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
+  // Like or unlike a comment
   const handleLike = async (commentId: string) => {
     try {
-      const updated: ICommentWithUser = await likeComment(commentId);
+      const updated = await likeComment(commentId);
       setComments((prev) =>
         prev.map((c) => (c._id === commentId ? updated : c))
       );
@@ -76,12 +81,10 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
-  const handleEdit = async (commentId: string, newText: string) => {
+  // Edit a comment (prompt for input)
+  const handleEdit = async (commentId: string, content: string) => {
     try {
-      const updated: ICommentWithUser = await apiEditComment(
-        commentId,
-        newText
-      );
+      const updated = await editComment(commentId, content);
       setComments((prev) =>
         prev.map((c) => (c._id === commentId ? updated : c))
       );
@@ -91,15 +94,17 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
+  // Delete modal trigger
   const confirmDelete = (commentId: string) => {
     setShowModal(true);
     setCommentToDelete(commentId);
   };
 
+  // Delete comment handler
   const handleDelete = async () => {
     if (!commentToDelete) return;
     try {
-      await apiDeleteComment(commentToDelete);
+      await deleteComment(commentToDelete);
       setComments((prev) => prev.filter((c) => c._id !== commentToDelete));
       setShowModal(false);
       setCommentToDelete(null);
@@ -111,6 +116,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6 border border-gray-700 rounded-lg">
+      {/* Signed-in user info or sign-in prompt */}
       {isSignedIn ? (
         <div className="flex items-center gap-2 text-sm text-gray-300">
           <p>Signed in as:</p>
@@ -140,6 +146,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         </div>
       )}
 
+      {/* New comment input */}
       {isSignedIn && (
         <div className="space-y-2">
           <Textarea
@@ -160,8 +167,10 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         </div>
       )}
 
+      {/* Error display */}
       {error && <Alert color="failure">{error}</Alert>}
 
+      {/* Comment list */}
       <div>
         <div className="flex items-center gap-2 mb-4">
           <p className="text-sm text-gray-300">Comments:</p>
@@ -175,14 +184,16 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         ) : (
           <div className="space-y-4">
             {comments.map((c) => {
-              const isAuthor = isSignedIn && user?.id === String(c.userId);
+              // Check if the logged-in user is the author of the comment
+              const isAuthor = isSignedIn && user?.id === c.userId.toString();
 
               return (
                 <div
-                  key={c._id}
+                  key={c._id.toString()}
                   className="border border-gray-600 rounded-lg p-4 space-y-2"
                 >
                   <div className="flex items-start justify-between">
+                    {/* Avatar and metadata */}
                     <div className="flex items-center gap-2">
                       <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
                         <Image
@@ -205,6 +216,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                       </div>
                     </div>
 
+                    {/* Edit/Delete for author only */}
                     {isAuthor && (
                       <div className="flex items-center gap-2">
                         <button
@@ -218,7 +230,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                               newText.trim() &&
                               newText.trim() !== c.content
                             ) {
-                              handleEdit(c._id, newText.trim());
+                              handleEdit(c._id.toString(), newText.trim());
                             }
                           }}
                           className="text-sm text-yellow-400 hover:text-yellow-600"
@@ -226,7 +238,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                           <FaEdit /> Edit
                         </button>
                         <button
-                          onClick={() => confirmDelete(c._id)}
+                          onClick={() => confirmDelete(c._id.toString())}
                           className="text-sm text-red-400 hover:text-red-600"
                         >
                           <FaTrash /> Delete
@@ -235,11 +247,13 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                     )}
                   </div>
 
+                  {/* Comment body */}
                   <p className="text-gray-200">{c.content}</p>
 
+                  {/* Like button */}
                   <div className="flex items-center gap-2 text-sm text-gray-400">
                     <button
-                      onClick={() => handleLike(c._id)}
+                      onClick={() => handleLike(c._id.toString())}
                       className="flex items-center gap-1 hover:text-blue-400"
                     >
                       <FaThumbsUp />
@@ -253,6 +267,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         )}
       </div>
 
+      {/* Delete confirmation modal */}
       <Modal
         show={showModal}
         onClose={() => setShowModal(false)}
