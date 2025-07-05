@@ -2,19 +2,20 @@
 
 import { NextResponse } from "next/server";
 import { connect } from "@/lib/mongodb/mongoose";
-import Comment from "@/lib/models/comment.model";     // Comment model
-import User from "@/lib/models/user.model";           // User model
-import { auth } from "@clerk/nextjs/server";          // Clerk server-side auth
+import Comment from "@/lib/models/comment.model"; // Mongoose Comment model
+import User from "@/lib/models/user.model";       // Mongoose User model
+import { auth } from "@clerk/nextjs/server";      // Clerk server-side session
 
 /**
  * POST /api/comments/create
- * Creates a comment for a specific post by an authenticated user.
+ * Creates a comment tied to a post and a Clerk-authenticated user.
  */
 export async function POST(req: Request) {
-  await connect(); // 1. Ensure DB connection
+  // 1. Connect to MongoDB
+  await connect();
 
   try {
-    // 2. Get the current Clerk user ID from session
+    // 2. Get authenticated Clerk user ID
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ message: "Not authenticated" }, { status: 403 });
@@ -24,28 +25,38 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { content, postId } = body;
 
-    // 4. Prevent spoofing (optional)
+    // 4. Optional double-check: block user spoofing
     if (body.userId && body.userId !== userId) {
       return NextResponse.json({ message: "You're not allowed to impersonate another user." }, { status: 403 });
     }
 
-    // 5. Look up user by Clerk ID
+    // 5. Look up the user from our DB (by Clerk ID)
     const user = await User.findOne({ clerkId: userId }).lean();
     if (!user || !user._id) {
       return NextResponse.json({ message: "User not found." }, { status: 404 });
     }
 
-    // 6. Create the comment using MongoDB's internal _id as userId
-    const newComment = new Comment({
+    // 6. Create and save the new comment
+    const newComment = await Comment.create({
       content,
       postId,
-      userId: user._id.toString(), // Cast ObjectId to string
+      userId: user._id, // Use internal ObjectId, not Clerk ID
     });
 
-    await newComment.save();
+    // 7. Normalize and return the full comment structure
+    const formattedComment = {
+      _id: newComment._id.toString(),
+      postId: newComment.postId,
+      content: newComment.content,
+      userId: newComment.userId.toString(),
+      numberOfLikes: newComment.numberOfLikes ?? 0,
+      likes: [],
+      createdAt: newComment.createdAt,
+      authorUsername: user.username,
+      authorImageUrl: user.profilePicture || "/default-avatar.png",
+    };
 
-    // 7. Return the created comment
-    return NextResponse.json(newComment, { status: 200 });
+    return NextResponse.json(formattedComment, { status: 200 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal Server Error";
     return NextResponse.json({ message }, { status: 500 });
