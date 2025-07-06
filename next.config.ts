@@ -15,10 +15,24 @@ const nextConfig: NextConfig = {
         hostname: "upload.wikimedia.org",
         pathname: "/**",
       },
-       {
+      {
         protocol: "https",
-        // Clerk’s default image host; if yours differs, replace it:
         hostname: "images.clerk.dev",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.clerk.dev", // Add this
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.clerkusercontent.com", // Add this
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com", // Add this (Google avatars)
         pathname: "/**",
       },
     ],
