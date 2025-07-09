@@ -53,6 +53,13 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     loadComments();
   }, [postId]);
 
+  // Check the clear url
+  useEffect(() => {
+    if (user?.imageUrl) {
+      console.log("Clerk image URL:", user.imageUrl);
+    }
+  }, [user]);
+
   // Handle new comment submission
   const handleSubmit = async () => {
     const content = newContent.trim();
