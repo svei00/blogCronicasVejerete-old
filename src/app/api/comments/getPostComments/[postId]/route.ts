@@ -1,7 +1,9 @@
 // /src/app/api/comments/getPostComments/[postId]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/lib/mongodb/mongoose";
 import Comment from "@/lib/models/comment.model";
+import { Types } from "mongoose"; // for ObjectId type
 
 /**
  * GET /api/comments/getPostComments/[postId]
@@ -22,30 +24,31 @@ export async function GET(request: NextRequest) {
 
     // 3. Define the expected shape of populated comments
     interface PopulatedComment {
-      _id: string;
+      _id: Types.ObjectId;
       postId: string;
       content: string;
       userId: {
-        _id: string;
+        _id: Types.ObjectId;
         username?: string;
         profilePicture?: string;
       };
       likes?: string[];
+      numberOfLikes?: number;
       createdAt: Date;
     }
 
     // 4. Fetch comments with populated user info
     const comments = await Comment.find({ postId })
       .sort({ createdAt: -1 })
-      .populate("userId", "username profilePicture")
-      .lean<PopulatedComment[]>();
+      .populate("userId", "username profilePicture") // populate userId with select fields
+      .lean<PopulatedComment[]>(); // Cast for safety
 
     // 5. Map to the ICommentWithUser format expected by frontend
     const mapped = comments.map((c) => ({
       _id: c._id.toString(),
-      postId: c.postId.toString(),
+      postId: c.postId,
       content: c.content,
-      userId: c.userId._id.toString(),
+      userId: c.userId._id.toString(), // convert ObjectId to string
       numberOfLikes: Array.isArray(c.likes) ? c.likes.length : 0,
       likes: (c.likes || []).map((id) => id.toString()),
       createdAt: c.createdAt,
