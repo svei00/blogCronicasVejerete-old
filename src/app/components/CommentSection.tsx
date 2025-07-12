@@ -192,7 +192,8 @@ export default function CommentSection({ postId }: CommentSectionProps) {
           <div className="space-y-4">
             {comments.map((c) => {
               // Check if the logged-in user is the author of the comment
-              const isAuthor = isSignedIn && user?.id === c.userId.toString();
+              const isAuthor =
+                isSignedIn && c.authorUsername === user?.username;
 
               return (
                 <div
