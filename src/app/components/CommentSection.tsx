@@ -1,4 +1,3 @@
-// /src/app/components/CommentSection.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -21,25 +20,20 @@ interface CommentSectionProps {
   postId: string;
 }
 
-// Extends IComment with author data for frontend rendering
 export interface ICommentWithUser extends IComment {
   authorUsername: string;
   authorImageUrl: string;
 }
 
-// Component begins here
 export default function CommentSection({ postId }: CommentSectionProps) {
-  // State for comments, new comment input, errors, and delete modal
   const [comments, setComments] = useState<ICommentWithUser[]>([]);
   const [newContent, setNewContent] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
 
-  // Clerk authentication
   const { isSignedIn, user } = useUser();
 
-  // Load comments on mount or when postId changes
   useEffect(() => {
     const loadComments = async () => {
       try {
@@ -60,10 +54,10 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   //   }
   // }, [user]);
 
-  // Handle new comment submission
   const handleSubmit = async () => {
     const content = newContent.trim();
     if (!content) return;
+
     try {
       const created = await createComment(postId, content);
       setComments((prev) => [created, ...prev]);
@@ -75,7 +69,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
-  // Like or unlike a comment
   const handleLike = async (commentId: string) => {
     try {
       const updated = await likeComment(commentId);
@@ -88,10 +81,9 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
-  // Edit a comment (prompt for input)
-  const handleEdit = async (commentId: string, content: string) => {
+  const handleEdit = async (commentId: string, newText: string) => {
     try {
-      const updated = await editComment(commentId, content);
+      const updated = await editComment(commentId, newText);
       setComments((prev) =>
         prev.map((c) => (c._id === commentId ? updated : c))
       );
@@ -101,20 +93,22 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
-  // Delete modal trigger
   const confirmDelete = (commentId: string) => {
     setShowModal(true);
     setCommentToDelete(commentId);
   };
 
-  // Delete comment handler
   const handleDelete = async () => {
     if (!commentToDelete) return;
+
     try {
       await deleteComment(commentToDelete);
-      setComments((prev) => prev.filter((c) => c._id !== commentToDelete));
+      setComments((prev) =>
+        prev.filter((c) => c._id.toString() !== commentToDelete)
+      );
       setShowModal(false);
       setCommentToDelete(null);
+      setError(null);
     } catch (err) {
       console.error("Failed to delete comment:", err);
       setError("Could not delete comment.");
@@ -123,7 +117,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6 border border-gray-700 rounded-lg">
-      {/* Signed-in user info or sign-in prompt */}
       {isSignedIn ? (
         <div className="flex items-center gap-2 text-sm text-gray-300">
           <p>Signed in as:</p>
@@ -153,7 +146,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         </div>
       )}
 
-      {/* New comment input */}
       {isSignedIn && (
         <div className="space-y-2">
           <Textarea
@@ -174,10 +166,8 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         </div>
       )}
 
-      {/* Error display */}
       {error && <Alert color="failure">{error}</Alert>}
 
-      {/* Comment list */}
       <div>
         <div className="flex items-center gap-2 mb-4">
           <p className="text-sm text-gray-300">Comments:</p>
@@ -191,42 +181,48 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         ) : (
           <div className="space-y-4">
             {comments.map((c) => {
-              // Check if the logged-in user is the author of the comment
-              const isAuthor =
-                isSignedIn && c.authorUsername === user?.username;
+              const isAuthor = isSignedIn && user?.id === c.userId.toString();
 
               return (
                 <div
                   key={c._id.toString()}
                   className="border border-gray-600 rounded-lg p-4 space-y-2"
                 >
-                  <div className="flex items-start justify-between">
-                    {/* Avatar and metadata */}
-                    <div className="flex items-center gap-2">
-                      <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
-                        <Image
-                          src={c.authorImageUrl || "/default-avatar.png"}
-                          alt={c.authorUsername}
-                          fill
-                          className="object-cover"
-                          sizes="24px"
-                        />
-                      </div>
-                      <div className="flex flex-col leading-tight">
-                        <span className="text-xs font-semibold text-gray-100">
-                          @{c.authorUsername}
-                        </span>
-                        <span className="text-2xs text-gray-400">
-                          {formatDistanceToNow(new Date(c.createdAt), {
-                            addSuffix: true,
-                          })}
-                        </span>
-                      </div>
+                  <div className="flex items-center gap-2">
+                    <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
+                      <Image
+                        src={c.authorImageUrl || "/default-avatar.png"}
+                        alt={c.authorUsername}
+                        fill
+                        className="object-cover"
+                        sizes="24px"
+                      />
                     </div>
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-xs font-semibold text-gray-100">
+                        @{c.authorUsername}
+                      </span>
+                      <span className="text-2xs text-gray-400">
+                        {formatDistanceToNow(new Date(c.createdAt), {
+                          addSuffix: true,
+                        })}
+                      </span>
+                    </div>
+                  </div>
 
-                    {/* Edit/Delete for author only */}
+                  <p className="text-gray-200">{c.content}</p>
+
+                  <div className="flex items-center gap-4 text-sm text-gray-400">
+                    <button
+                      onClick={() => handleLike(c._id.toString())}
+                      className="flex items-center gap-1 hover:text-blue-400"
+                    >
+                      <FaThumbsUp />
+                      <span>{c.numberOfLikes}</span>
+                    </button>
+
                     {isAuthor && (
-                      <div className="flex items-center gap-2">
+                      <>
                         <button
                           onClick={() => {
                             const newText = prompt(
@@ -241,32 +237,20 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                               handleEdit(c._id.toString(), newText.trim());
                             }
                           }}
-                          className="text-sm text-yellow-400 hover:text-yellow-600"
+                          className="flex items-center gap-1 text-yellow-400 hover:text-yellow-600"
                         >
-                          <FaEdit /> Edit
+                          <FaEdit />
+                          Edit
                         </button>
                         <button
                           onClick={() => confirmDelete(c._id.toString())}
-                          className="text-sm text-red-400 hover:text-red-600"
+                          className="flex items-center gap-1 text-red-400 hover:text-red-600"
                         >
-                          <FaTrash /> Delete
+                          <FaTrash />
+                          Delete
                         </button>
-                      </div>
+                      </>
                     )}
-                  </div>
-
-                  {/* Comment body */}
-                  <p className="text-gray-200">{c.content}</p>
-
-                  {/* Like button */}
-                  <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <button
-                      onClick={() => handleLike(c._id.toString())}
-                      className="flex items-center gap-1 hover:text-blue-400"
-                    >
-                      <FaThumbsUp />
-                      <span>{c.numberOfLikes}</span>
-                    </button>
                   </div>
                 </div>
               );
@@ -275,7 +259,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         )}
       </div>
 
-      {/* Delete confirmation modal */}
       <Modal
         show={showModal}
         onClose={() => setShowModal(false)}
