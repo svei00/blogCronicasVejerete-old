@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/lib/mongodb/mongoose";
 import Comment from "@/lib/models/comment.model";
+import User from "@/lib/models/user.model"; // <--- Needed to populate author data
 import { auth } from "@clerk/nextjs/server";
 
 /**
@@ -34,7 +35,7 @@ export async function PUT(request: NextRequest) {
 
     // 6. Authorization: allow if user is owner or has isAdmin flag
     const isAdmin = (sessionClaims?.publicMetadata as { isAdmin?: boolean })?.isAdmin;
-    if (comment.userId !== userId && !isAdmin) {
+    if (comment.userId.toString() !== userId && !isAdmin) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
@@ -42,10 +43,28 @@ export async function PUT(request: NextRequest) {
     comment.content = content;
     await comment.save();
 
-    // 8. Return the updated comment
-    return NextResponse.json(comment, { status: 200 });
+    // 8. Get the author from DB using the comment.userId
+    const author = await User.findById(comment.userId).lean();
+    if (!author) {
+      return NextResponse.json({ message: "Author not found" }, { status: 404 });
+    }
+
+    // 9. Return the updated comment in ICommentWithUser format
+    const formatted = {
+      _id: comment._id.toString(),
+      postId: comment.postId,
+      content: comment.content,
+      userId: comment.userId.toString(),
+      numberOfLikes: comment.likes?.length ?? 0,
+      likes: comment.likes ?? [],
+      createdAt: comment.createdAt,
+      authorUsername: author.username,
+      authorImageUrl: author.profilePicture || "/default-avatar.png",
+    };
+
+    return NextResponse.json(formatted, { status: 200 });
   } catch (error: unknown) {
-    // 9. Error handling: narrow unknown to Error for message
+    // 10. Error handling: narrow unknown to Error for message
     const message = error instanceof Error ? error.message : "Internal Server Error";
     return NextResponse.json({ message }, { status: 500 });
   }
