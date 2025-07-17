@@ -21,7 +21,6 @@ interface CommentSectionProps {
   postId: string;
 }
 
-// Extended interface includes user display data
 export interface ICommentWithUser extends IComment {
   authorUsername: string;
   authorImageUrl: string;
@@ -37,6 +36,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
   const { isSignedIn, user } = useUser();
 
+  // Load comments
   useEffect(() => {
     const loadComments = async () => {
       try {
@@ -212,7 +212,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
                   <p className="text-gray-200">{c.content}</p>
 
-                  <div className="flex justify-between items-center text-sm text-gray-400">
+                  <div className="flex items-center gap-4 text-sm text-gray-400">
                     <button
                       onClick={() => handleLike(c._id.toString())}
                       className="flex items-center gap-1 hover:text-blue-400"
@@ -222,7 +222,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                     </button>
 
                     {isAuthor && (
-                      <div className="flex items-center gap-4">
+                      <>
                         <button
                           onClick={() => {
                             const newText = prompt(
@@ -237,17 +237,20 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                               handleEdit(c._id.toString(), newText.trim());
                             }
                           }}
-                          className="text-yellow-400 hover:text-yellow-600 flex items-center gap-1"
+                          className="flex items-center gap-1 text-yellow-400 hover:text-yellow-600"
                         >
-                          <FaEdit /> Edit
+                          <FaEdit />
+                          Edit
                         </button>
+
                         <button
                           onClick={() => confirmDelete(c._id.toString())}
-                          className="text-red-400 hover:text-red-600 flex items-center gap-1"
+                          className="flex items-center gap-1 text-red-400 hover:text-red-600"
                         >
-                          <FaTrash /> Delete
+                          <FaTrash />
+                          Delete
                         </button>
-                      </div>
+                      </>
                     )}
                   </div>
                 </div>
