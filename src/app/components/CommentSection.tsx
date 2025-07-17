@@ -1,3 +1,4 @@
+// /src/app/components/CommentSection.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -20,9 +21,11 @@ interface CommentSectionProps {
   postId: string;
 }
 
+// Extended interface includes user display data
 export interface ICommentWithUser extends IComment {
   authorUsername: string;
   authorImageUrl: string;
+  authorClerkId: string;
 }
 
 export default function CommentSection({ postId }: CommentSectionProps) {
@@ -57,7 +60,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   const handleSubmit = async () => {
     const content = newContent.trim();
     if (!content) return;
-
     try {
       const created = await createComment(postId, content);
       setComments((prev) => [created, ...prev]);
@@ -81,9 +83,9 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
-  const handleEdit = async (commentId: string, newText: string) => {
+  const handleEdit = async (commentId: string, content: string) => {
     try {
-      const updated = await editComment(commentId, newText);
+      const updated = await editComment(commentId, content);
       setComments((prev) =>
         prev.map((c) => (c._id === commentId ? updated : c))
       );
@@ -100,15 +102,11 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
   const handleDelete = async () => {
     if (!commentToDelete) return;
-
     try {
       await deleteComment(commentToDelete);
-      setComments((prev) =>
-        prev.filter((c) => c._id.toString() !== commentToDelete)
-      );
+      setComments((prev) => prev.filter((c) => c._id !== commentToDelete));
       setShowModal(false);
       setCommentToDelete(null);
-      setError(null);
     } catch (err) {
       console.error("Failed to delete comment:", err);
       setError("Could not delete comment.");
@@ -181,38 +179,40 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         ) : (
           <div className="space-y-4">
             {comments.map((c) => {
-              const isAuthor = isSignedIn && user?.id === c.userId.toString();
+              const isAuthor = isSignedIn && user?.id === c.authorClerkId;
 
               return (
                 <div
                   key={c._id.toString()}
                   className="border border-gray-600 rounded-lg p-4 space-y-2"
                 >
-                  <div className="flex items-center gap-2">
-                    <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
-                      <Image
-                        src={c.authorImageUrl || "/default-avatar.png"}
-                        alt={c.authorUsername}
-                        fill
-                        className="object-cover"
-                        sizes="24px"
-                      />
-                    </div>
-                    <div className="flex flex-col leading-tight">
-                      <span className="text-xs font-semibold text-gray-100">
-                        @{c.authorUsername}
-                      </span>
-                      <span className="text-2xs text-gray-400">
-                        {formatDistanceToNow(new Date(c.createdAt), {
-                          addSuffix: true,
-                        })}
-                      </span>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
+                        <Image
+                          src={c.authorImageUrl || "/default-avatar.png"}
+                          alt={c.authorUsername}
+                          fill
+                          className="object-cover"
+                          sizes="24px"
+                        />
+                      </div>
+                      <div className="flex flex-col leading-tight">
+                        <span className="text-xs font-semibold text-gray-100">
+                          @{c.authorUsername}
+                        </span>
+                        <span className="text-2xs text-gray-400">
+                          {formatDistanceToNow(new Date(c.createdAt), {
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
                   <p className="text-gray-200">{c.content}</p>
 
-                  <div className="flex items-center gap-4 text-sm text-gray-400">
+                  <div className="flex justify-between items-center text-sm text-gray-400">
                     <button
                       onClick={() => handleLike(c._id.toString())}
                       className="flex items-center gap-1 hover:text-blue-400"
@@ -222,7 +222,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                     </button>
 
                     {isAuthor && (
-                      <>
+                      <div className="flex items-center gap-4">
                         <button
                           onClick={() => {
                             const newText = prompt(
@@ -237,19 +237,17 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                               handleEdit(c._id.toString(), newText.trim());
                             }
                           }}
-                          className="flex items-center gap-1 text-yellow-400 hover:text-yellow-600"
+                          className="text-yellow-400 hover:text-yellow-600 flex items-center gap-1"
                         >
-                          <FaEdit />
-                          Edit
+                          <FaEdit /> Edit
                         </button>
                         <button
                           onClick={() => confirmDelete(c._id.toString())}
-                          className="flex items-center gap-1 text-red-400 hover:text-red-600"
+                          className="text-red-400 hover:text-red-600 flex items-center gap-1"
                         >
-                          <FaTrash />
-                          Delete
+                          <FaTrash /> Delete
                         </button>
-                      </>
+                      </div>
                     )}
                   </div>
                 </div>
