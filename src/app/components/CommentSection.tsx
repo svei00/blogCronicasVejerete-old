@@ -1,3 +1,4 @@
+// /src/app/components/CommentSection.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -20,10 +21,10 @@ interface CommentSectionProps {
   postId: string;
 }
 
-// Extends IComment with author data for frontend rendering
 export interface ICommentWithUser extends IComment {
   authorUsername: string;
   authorImageUrl: string;
+  authorClerkId: string;
 }
 
 export default function CommentSection({ postId }: CommentSectionProps) {
@@ -35,7 +36,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
   const { isSignedIn, user } = useUser();
 
-  // Load comments on mount or when postId changes
+  // Load comments
   useEffect(() => {
     const loadComments = async () => {
       try {
@@ -114,7 +115,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6 border border-gray-700 rounded-lg">
-      {/* Signed-in user info or sign-in prompt */}
       {isSignedIn ? (
         <div className="flex items-center gap-2 text-sm text-gray-300">
           <p>Signed in as:</p>
@@ -144,7 +144,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         </div>
       )}
 
-      {/* New comment input */}
       {isSignedIn && (
         <div className="space-y-2">
           <Textarea
@@ -167,7 +166,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
       {error && <Alert color="failure">{error}</Alert>}
 
-      {/* Comment list */}
       <div>
         <div className="flex items-center gap-2 mb-4">
           <p className="text-sm text-gray-300">Comments:</p>
@@ -181,8 +179,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         ) : (
           <div className="space-y-4">
             {comments.map((c) => {
-              const isAuthor =
-                isSignedIn && user?.username === c.authorUsername;
+              const isAuthor = isSignedIn && user?.id === c.authorClerkId;
 
               return (
                 <div
@@ -213,40 +210,8 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                     </div>
                   </div>
 
-                  {/* 🔧 Temporarily move Edit/Delete here if author */}
-                  {isAuthor && (
-                    <div className="flex gap-3 text-xs text-white mb-2"><!--- Here -->
-                      <button
-                        onClick={() => {
-                          const newText = prompt(
-                            "Edit your comment:",
-                            c.content
-                          );
-                          if (
-                            newText &&
-                            newText.trim() &&
-                            newText.trim() !== c.content
-                          ) {
-                            handleEdit(c._id.toString(), newText.trim());
-                          }
-                        }}
-                        className="bg-yellow-600 hover:bg-yellow-500 px-2 py-1 rounded"
-                      >
-                        ✏️ Edit
-                      </button>
-                      <button
-                        onClick={() => confirmDelete(c._id.toString())}
-                        className="bg-red-600 hover:bg-red-500 px-2 py-1 rounded"
-                      >
-                        🗑️ Delete
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Comment body */}
                   <p className="text-gray-200">{c.content}</p>
 
-                  {/* Like button */}
                   <div className="flex items-center gap-4 text-sm text-gray-400">
                     <button
                       onClick={() => handleLike(c._id.toString())}
@@ -255,6 +220,38 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                       <FaThumbsUp />
                       <span>{c.numberOfLikes}</span>
                     </button>
+
+                    {isAuthor && (
+                      <>
+                        <button
+                          onClick={() => {
+                            const newText = prompt(
+                              "Edit your comment:",
+                              c.content
+                            );
+                            if (
+                              newText &&
+                              newText.trim() &&
+                              newText.trim() !== c.content
+                            ) {
+                              handleEdit(c._id.toString(), newText.trim());
+                            }
+                          }}
+                          className="flex items-center gap-1 text-yellow-400 hover:text-yellow-600"
+                        >
+                          <FaEdit />
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => confirmDelete(c._id.toString())}
+                          className="flex items-center gap-1 text-red-400 hover:text-red-600"
+                        >
+                          <FaTrash />
+                          Delete
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               );
@@ -263,7 +260,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         )}
       </div>
 
-      {/* Delete confirmation modal */}
       <Modal
         show={showModal}
         onClose={() => setShowModal(false)}
