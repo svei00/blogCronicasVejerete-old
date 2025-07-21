@@ -24,7 +24,6 @@ interface CommentSectionProps {
 export interface ICommentWithUser extends IComment {
   authorUsername: string;
   authorImageUrl: string;
-  authorClerkId: string;
 }
 
 export default function CommentSection({ postId }: CommentSectionProps) {
@@ -36,7 +35,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
   const { isSignedIn, user } = useUser();
 
-  // Load comments
+  // ✅ Load comments when component mounts or postId changes
   useEffect(() => {
     const loadComments = async () => {
       try {
@@ -50,6 +49,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     loadComments();
   }, [postId]);
 
+  // ✅ Debug image URL for Clerk avatar (preserved as requested)
   // Check the clear url
   // useEffect(() => {
   //   if (user?.imageUrl) {
@@ -115,6 +115,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6 border border-gray-700 rounded-lg">
+      {/* Authenticated user display */}
       {isSignedIn ? (
         <div className="flex items-center gap-2 text-sm text-gray-300">
           <p>Signed in as:</p>
@@ -144,6 +145,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         </div>
       )}
 
+      {/* Comment Input */}
       {isSignedIn && (
         <div className="space-y-2">
           <Textarea
@@ -179,40 +181,40 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         ) : (
           <div className="space-y-4">
             {comments.map((c) => {
-              const isAuthor = isSignedIn && user?.id === c.authorClerkId;
+              const isAuthor = isSignedIn && user?.id === c.userId.toString();
 
               return (
                 <div
                   key={c._id.toString()}
                   className="border border-gray-600 rounded-lg p-4 space-y-2"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
-                        <Image
-                          src={c.authorImageUrl || "/default-avatar.png"}
-                          alt={c.authorUsername}
-                          fill
-                          className="object-cover"
-                          sizes="24px"
-                        />
-                      </div>
-                      <div className="flex flex-col leading-tight">
-                        <span className="text-xs font-semibold text-gray-100">
-                          @{c.authorUsername}
-                        </span>
-                        <span className="text-2xs text-gray-400">
-                          {formatDistanceToNow(new Date(c.createdAt), {
-                            addSuffix: true,
-                          })}
-                        </span>
-                      </div>
+                  <div className="flex items-start gap-2">
+                    <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
+                      <Image
+                        src={c.authorImageUrl || "/default-avatar.png"}
+                        alt={c.authorUsername}
+                        fill
+                        className="object-cover"
+                        sizes="24px"
+                      />
+                    </div>
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-xs font-semibold text-gray-100">
+                        @{c.authorUsername}
+                      </span>
+                      <span className="text-2xs text-gray-400">
+                        {formatDistanceToNow(new Date(c.createdAt), {
+                          addSuffix: true,
+                        })}
+                      </span>
                     </div>
                   </div>
 
+                  {/* Comment content */}
                   <p className="text-gray-200">{c.content}</p>
 
-                  <div className="flex items-center gap-4 text-sm text-gray-400">
+                  {/* Like + Edit/Delete Row */}
+                  <div className="flex justify-between items-center text-sm text-gray-400 mt-2">
                     <button
                       onClick={() => handleLike(c._id.toString())}
                       className="flex items-center gap-1 hover:text-blue-400"
@@ -222,7 +224,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                     </button>
 
                     {isAuthor && (
-                      <>
+                      <div className="flex items-center gap-3">
                         <button
                           onClick={() => {
                             const newText = prompt(
@@ -237,20 +239,17 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                               handleEdit(c._id.toString(), newText.trim());
                             }
                           }}
-                          className="flex items-center gap-1 text-yellow-400 hover:text-yellow-600"
+                          className="text-yellow-400 hover:text-yellow-600"
                         >
-                          <FaEdit />
-                          Edit
+                          <FaEdit className="inline-block mr-1" /> Edit
                         </button>
-
                         <button
                           onClick={() => confirmDelete(c._id.toString())}
-                          className="flex items-center gap-1 text-red-400 hover:text-red-600"
+                          className="text-red-400 hover:text-red-600"
                         >
-                          <FaTrash />
-                          Delete
+                          <FaTrash className="inline-block mr-1" /> Delete
                         </button>
-                      </>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -260,6 +259,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         )}
       </div>
 
+      {/* Delete Confirmation Modal */}
       <Modal
         show={showModal}
         onClose={() => setShowModal(false)}
