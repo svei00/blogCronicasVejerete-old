@@ -180,38 +180,29 @@ export default function CommentSection({ postId }: CommentSectionProps) {
           <p className="text-center text-gray-400">No comments yet!</p>
         ) : (
           <div className="space-y-4">
+            // Updated isAuthor calculation with better debugging and handling:
             {comments.map((c) => {
-              const isAuthor = isSignedIn && user?.id === c.userId.toString();
+              // More robust author checking
+              const isAuthor = !!(
+                isSignedIn &&
+                user?.id &&
+                c.userId &&
+                String(user.id) === String(c.userId)
+              );
+
+              // Optional: Add debugging (remove in production)
+              if (isSignedIn && user?.id) {
+                console.log(
+                  `Comment ${c._id}: user.id=${user.id}, c.userId=${c.userId}, isAuthor=${isAuthor}`
+                );
+              }
 
               return (
                 <div
                   key={c._id.toString()}
                   className="border border-gray-600 rounded-lg p-4 space-y-2"
                 >
-                  <div className="flex items-start gap-2">
-                    <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
-                      <Image
-                        src={c.authorImageUrl || "/default-avatar.png"}
-                        alt={c.authorUsername}
-                        fill
-                        className="object-cover"
-                        sizes="24px"
-                      />
-                    </div>
-                    <div className="flex flex-col leading-tight">
-                      <span className="text-xs font-semibold text-gray-100">
-                        @{c.authorUsername}
-                      </span>
-                      <span className="text-2xs text-gray-400">
-                        {formatDistanceToNow(new Date(c.createdAt), {
-                          addSuffix: true,
-                        })}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Comment content */}
-                  <p className="text-gray-200">{c.content}</p>
+                  {/* ... your existing comment content ... */}
 
                   {/* Like + Edit/Delete Row */}
                   <div className="flex justify-between items-center text-sm text-gray-400 mt-2">
@@ -222,6 +213,13 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                       <FaThumbsUp />
                       <span>{c.numberOfLikes}</span>
                     </button>
+
+                    {/* Debug info - remove in production */}
+                    {process.env.NODE_ENV === "development" && (
+                      <span className="text-xs text-gray-500">
+                        Auth: {isAuthor ? "YES" : "NO"}
+                      </span>
+                    )}
 
                     {isAuthor && (
                       <div className="flex items-center gap-3">
