@@ -1,4 +1,3 @@
-// /src/app/components/CommentSection.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -35,7 +34,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
   const { isSignedIn, user } = useUser();
 
-  // ✅ Load comments when component mounts or postId changes
   useEffect(() => {
     const loadComments = async () => {
       try {
@@ -49,7 +47,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     loadComments();
   }, [postId]);
 
-  // ✅ Debug image URL for Clerk avatar (preserved as requested)
   // Check the clear url
   // useEffect(() => {
   //   if (user?.imageUrl) {
@@ -115,7 +112,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6 border border-gray-700 rounded-lg">
-      {/* Authenticated user display */}
       {isSignedIn ? (
         <div className="flex items-center gap-2 text-sm text-gray-300">
           <p>Signed in as:</p>
@@ -145,7 +141,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         </div>
       )}
 
-      {/* Comment Input */}
       {isSignedIn && (
         <div className="space-y-2">
           <Textarea
@@ -181,14 +176,19 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         ) : (
           <div className="space-y-4">
             {comments.map((c) => {
-              const isAuthor = isSignedIn && user?.id === c.userId.toString();
+              const isAuthor = !!(
+                isSignedIn &&
+                user?.id &&
+                c.userId &&
+                String(user.id) === String(c.userId)
+              );
 
               return (
                 <div
                   key={c._id.toString()}
                   className="border border-gray-600 rounded-lg p-4 space-y-2"
                 >
-                  <div className="flex items-start gap-2">
+                  <div className="flex items-center gap-2">
                     <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
                       <Image
                         src={c.authorImageUrl || "/default-avatar.png"}
@@ -210,10 +210,8 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                     </div>
                   </div>
 
-                  {/* Comment content */}
                   <p className="text-gray-200">{c.content}</p>
 
-                  {/* Like + Edit/Delete Row */}
                   <div className="flex justify-between items-center text-sm text-gray-400 mt-2">
                     <button
                       onClick={() => handleLike(c._id.toString())}
@@ -259,7 +257,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
       <Modal
         show={showModal}
         onClose={() => setShowModal(false)}
