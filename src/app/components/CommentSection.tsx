@@ -1,284 +1,264 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { IComment } from "@/lib/models/comment.model";
-import {
-  fetchPostComments,
-  createComment,
-  likeComment,
-  editComment,
-  deleteComment,
-} from "@/lib/actions/comments";
-import { useUser, SignInButton } from "@clerk/nextjs";
+import React, { useEffect, useState } from "react";
 import { Textarea, Button, Alert, Modal } from "flowbite-react";
 import { FaThumbsUp, FaEdit, FaTrash } from "react-icons/fa";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "next/link"; // ✅ Corrected
 import { formatDistanceToNow } from "date-fns";
 
-interface CommentSectionProps {
+interface IComment {
+  _id: string;
   postId: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  numberOfLikes: number;
 }
 
-export interface ICommentWithUser extends IComment {
+interface ICommentWithUser extends IComment {
   authorUsername: string;
   authorImageUrl: string;
 }
 
-export default function CommentSection({ postId }: CommentSectionProps) {
+const mockLoggedInUserId = "user_123456";
+const mockOtherUserId = "user_999999";
+
+let mockComments: ICommentWithUser[] = [
+  {
+    _id: "comment1",
+    postId: "post1",
+    userId: mockLoggedInUserId,
+    content: "Hello from me!",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    numberOfLikes: 1,
+    authorUsername: "john",
+    authorImageUrl: "https://placehold.co/32x32",
+  },
+  {
+    _id: "comment2",
+    postId: "post1",
+    userId: mockOtherUserId,
+    content: "Hello from someone else!",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    numberOfLikes: 3,
+    authorUsername: "jane",
+    authorImageUrl: "https://placehold.co/32x32",
+  },
+];
+
+const useMockUser = () => {
+  const [isSignedIn] = useState(true);
+  const [user] = useState({
+    id: mockLoggedInUserId,
+    username: "john",
+    imageUrl: "https://placehold.co/24x24",
+  });
+
+  return { isSignedIn, user };
+};
+
+const fetchPostComments = async (
+  postId: string
+): Promise<ICommentWithUser[]> => {
+  return mockComments.filter((c) => c.postId === postId);
+};
+
+const createComment = async (
+  postId: string,
+  content: string
+): Promise<ICommentWithUser> => {
+  const newComment: ICommentWithUser = {
+    _id: `c_${Date.now()}`,
+    postId,
+    userId: mockLoggedInUserId,
+    content,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    numberOfLikes: 0,
+    authorUsername: "john",
+    authorImageUrl: "https://placehold.co/32x32",
+  };
+  mockComments.unshift(newComment);
+  return newComment;
+};
+
+const likeComment = async (id: string): Promise<ICommentWithUser> => {
+  const comment = mockComments.find((c) => c._id === id)!;
+  comment.numberOfLikes += 1;
+  return comment;
+};
+
+const editComment = async (
+  id: string,
+  newContent: string
+): Promise<ICommentWithUser> => {
+  const comment = mockComments.find((c) => c._id === id)!;
+  comment.content = newContent;
+  comment.updatedAt = new Date().toISOString();
+  return comment;
+};
+
+const deleteComment = async (id: string): Promise<void> => {
+  mockComments = mockComments.filter((c) => c._id !== id);
+};
+
+interface Props {
+  postId: string;
+}
+
+export default function CommentSection({ postId }: Props) {
   const [comments, setComments] = useState<ICommentWithUser[]>([]);
   const [newContent, setNewContent] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState("");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn, user } = useMockUser();
 
   useEffect(() => {
-    const loadComments = async () => {
-      try {
-        const fetched = await fetchPostComments(postId);
-        setComments(fetched);
-      } catch (err) {
-        console.error("Error fetching comments:", err);
-        setError("Failed to load comments.");
-      }
-    };
-    loadComments();
+    fetchPostComments(postId).then(setComments);
   }, [postId]);
 
-  // Check the clear url
-  // useEffect(() => {
-  //   if (user?.imageUrl) {
-  //     console.log("Clerk image URL:", user.imageUrl);
-  //   }
-  // }, [user]);
-
   const handleSubmit = async () => {
-    const content = newContent.trim();
-    if (!content) return;
-    try {
-      const created = await createComment(postId, content);
-      setComments((prev) => [created, ...prev]);
-      setNewContent("");
-      setError(null);
-    } catch (err) {
-      console.error("Failed to create comment:", err);
-      setError("Could not post comment.");
-    }
+    if (!newContent.trim()) return;
+    const created = await createComment(postId, newContent.trim());
+    setComments([created, ...comments]);
+    setNewContent("");
   };
 
-  const handleLike = async (commentId: string) => {
-    try {
-      const updated = await likeComment(commentId);
-      setComments((prev) =>
-        prev.map((c) => (c._id === commentId ? updated : c))
-      );
-    } catch (err) {
-      console.error("Failed to like comment:", err);
-      setError("Could not update like.");
-    }
+  const handleLike = async (id: string) => {
+    const updated = await likeComment(id);
+    setComments((prev) => prev.map((c) => (c._id === id ? updated : c)));
   };
 
-  const handleEdit = async (commentId: string, content: string) => {
-    try {
-      const updated = await editComment(commentId, content);
-      setComments((prev) =>
-        prev.map((c) => (c._id === commentId ? updated : c))
-      );
-    } catch (err) {
-      console.error("Failed to edit comment:", err);
-      setError("Could not edit comment.");
-    }
+  const startEdit = (comment: ICommentWithUser) => {
+    setEditingCommentId(comment._id);
+    setEditingContent(comment.content);
+    setShowEditModal(true);
   };
 
-  const confirmDelete = (commentId: string) => {
-    setShowModal(true);
-    setCommentToDelete(commentId);
+  const confirmEdit = async () => {
+    if (!editingCommentId || !editingContent.trim()) return;
+    const updated = await editComment(editingCommentId, editingContent.trim());
+    setComments((prev) =>
+      prev.map((c) => (c._id === editingCommentId ? updated : c))
+    );
+    setShowEditModal(false);
   };
 
-  const handleDelete = async () => {
-    if (!commentToDelete) return;
-    try {
-      await deleteComment(commentToDelete);
-      setComments((prev) => prev.filter((c) => c._id !== commentToDelete));
-      setShowModal(false);
-      setCommentToDelete(null);
-    } catch (err) {
-      console.error("Failed to delete comment:", err);
-      setError("Could not delete comment.");
-    }
+  const confirmDelete = async () => {
+    if (!deletingId) return;
+    await deleteComment(deletingId);
+    setComments((prev) => prev.filter((c) => c._id !== deletingId));
+    setShowDeleteModal(false);
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4 space-y-6 border border-gray-700 rounded-lg">
-      {isSignedIn ? (
-        <div className="flex items-center gap-2 text-sm text-gray-300">
-          <p>Signed in as:</p>
-          <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
-            <Image
-              src={user?.imageUrl || "/default-avatar.png"}
-              alt={user?.username || "avatar"}
-              fill
-              className="object-cover"
-              sizes="24px"
-            />
-          </div>
-          <Link
-            href="/dashboard?tab=profile"
-            className="text-xs text-purple-400 hover:text-orange-400"
-          >
-            @{user?.username}
-          </Link>
-        </div>
-      ) : (
-        <div className="text-sm text-gray-400">
-          You must{" "}
-          <SignInButton mode="modal">
-            <button className="text-blue-400 underline">sign in</button>
-          </SignInButton>{" "}
-          to comment.
+    <div className="text-white p-4 space-y-4 bg-gray-800 rounded-md">
+      {isSignedIn && (
+        <div className="flex items-center space-x-2">
+          <Image
+            src={user.imageUrl}
+            alt="User"
+            width={24}
+            height={24}
+            className="rounded-full"
+          />
+          <span>@{user.username}</span>
         </div>
       )}
 
       {isSignedIn && (
-        <div className="space-y-2">
+        <div>
           <Textarea
-            placeholder="Write a comment..."
-            rows={3}
-            maxLength={1000}
             value={newContent}
             onChange={(e) => setNewContent(e.target.value)}
           />
-          <div className="flex justify-between items-center">
-            <p className="text-xs text-gray-500">
-              {(1000 - newContent.length).toLocaleString()} characters left
-            </p>
-            <Button onClick={handleSubmit} disabled={!newContent.trim()}>
-              Submit
-            </Button>
-          </div>
+          <Button onClick={handleSubmit} disabled={!newContent.trim()}>
+            Post
+          </Button>
         </div>
       )}
 
-      {error && <Alert color="failure">{error}</Alert>}
+      {comments.map((c) => {
+        const isAuthor = user?.id === c.userId;
+        return (
+          <div key={c._id} className="border border-gray-600 p-3 rounded-md">
+            <div className="flex items-center space-x-2">
+              <Image
+                src={c.authorImageUrl}
+                alt="avatar"
+                width={32}
+                height={32}
+                className="rounded-full"
+              />
+              <span className="font-semibold">@{c.authorUsername}</span>
+              <span className="text-sm text-gray-400">
+                {formatDistanceToNow(new Date(c.createdAt))} ago
+              </span>
+            </div>
+            <p className="mt-2">{c.content}</p>
+            <div className="flex justify-between mt-2 text-sm text-gray-300">
+              <button
+                onClick={() => handleLike(c._id)}
+                className="hover:text-blue-400 flex items-center gap-1"
+              >
+                <FaThumbsUp /> {c.numberOfLikes}
+              </button>
 
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <p className="text-sm text-gray-300">Comments:</p>
-          <div className="border border-green-400 text-green-400 py-1 px-2 rounded-sm text-xs">
-            {comments.length}
-          </div>
-        </div>
-
-        {comments.length === 0 && !error ? (
-          <p className="text-center text-gray-400">No comments yet!</p>
-        ) : (
-          <div className="space-y-4">
-            {comments.map((c) => {
-              const isAuthor = !!(
-                isSignedIn &&
-                user?.id &&
-                c.userId &&
-                String(user.id) === String(c.userId)
-              );
-
-              return (
-                <div
-                  key={c._id.toString()}
-                  className="border border-gray-600 rounded-lg p-4 space-y-2"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
-                      <Image
-                        src={c.authorImageUrl || "/default-avatar.png"}
-                        alt={c.authorUsername}
-                        fill
-                        className="object-cover"
-                        sizes="24px"
-                      />
-                    </div>
-                    <div className="flex flex-col leading-tight">
-                      <span className="text-xs font-semibold text-gray-100">
-                        @{c.authorUsername}
-                      </span>
-                      <span className="text-2xs text-gray-400">
-                        {formatDistanceToNow(new Date(c.createdAt), {
-                          addSuffix: true,
-                        })}
-                      </span>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-200">{c.content}</p>
-
-                  <div className="flex justify-between items-center text-sm text-gray-400 mt-2">
-                    <button
-                      onClick={() => handleLike(c._id.toString())}
-                      className="flex items-center gap-1 hover:text-blue-400"
-                    >
-                      <FaThumbsUp />
-                      <span>{c.numberOfLikes}</span>
-                    </button>
-
-                    {isAuthor && (
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => {
-                            const newText = prompt(
-                              "Edit your comment:",
-                              c.content
-                            );
-                            if (
-                              newText &&
-                              newText.trim() &&
-                              newText.trim() !== c.content
-                            ) {
-                              handleEdit(c._id.toString(), newText.trim());
-                            }
-                          }}
-                          className="text-yellow-400 hover:text-yellow-600"
-                        >
-                          <FaEdit className="inline-block mr-1" /> Edit
-                        </button>
-                        <button
-                          onClick={() => confirmDelete(c._id.toString())}
-                          className="text-red-400 hover:text-red-600"
-                        >
-                          <FaTrash className="inline-block mr-1" /> Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
+              {isAuthor && (
+                <div className="space-x-2">
+                  <button
+                    onClick={() => startEdit(c)}
+                    className="text-yellow-400 hover:text-yellow-500"
+                  >
+                    <FaEdit /> Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDeletingId(c._id);
+                      setShowDeleteModal(true);
+                    }}
+                    className="text-red-400 hover:text-red-500"
+                  >
+                    <FaTrash /> Delete
+                  </button>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <Modal
-        show={showModal}
-        onClose={() => setShowModal(false)}
-        popup
-        size="md"
-      >
-        <Modal.Header />
-        <Modal.Body>
-          <div className="text-center">
-            <p className="mb-5 text-lg text-gray-500">
-              Are you sure you want to delete this comment?
-            </p>
-            <div className="flex justify-center gap-4">
-              <Button color="failure" onClick={handleDelete}>
-                Yes, delete it
-              </Button>
-              <Button color="gray" onClick={() => setShowModal(false)}>
-                No, Cancel
-              </Button>
+              )}
             </div>
           </div>
+        );
+      })}
+
+      <Modal show={showEditModal} onClose={() => setShowEditModal(false)}>
+        <Modal.Header>Edit Comment</Modal.Header>
+        <Modal.Body>
+          <Textarea
+            value={editingContent}
+            onChange={(e) => setEditingContent(e.target.value)}
+          />
         </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={confirmEdit}>Save</Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
+        <Modal.Header>Delete Comment</Modal.Header>
+        <Modal.Body>Are you sure?</Modal.Body>
+        <Modal.Footer>
+          <Button color="failure" onClick={confirmDelete}>
+            Delete
+          </Button>
+          <Button onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+        </Modal.Footer>
       </Modal>
     </div>
   );
