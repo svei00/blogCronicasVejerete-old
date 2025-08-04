@@ -183,6 +183,10 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                 String(user.id) === String(c.userId)
               );
 
+              // DEBUG LOGGING — Add these lines:
+              console.log("Logged-in user ID:", user?.id);
+              console.log("Comment user ID:", c.userId);
+
               return (
                 <div
                   key={c._id.toString()}
