@@ -47,6 +47,13 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     loadComments();
   }, [postId]);
 
+  // Check the clear url
+  // useEffect(() => {
+  //   if (user?.imageUrl) {
+  //     console.log("Clerk image URL:", user.imageUrl);
+  //   }
+  // }, [user]);
+
   const handleSubmit = async () => {
     const content = newContent.trim();
     if (!content) return;
@@ -169,12 +176,14 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         ) : (
           <div className="space-y-4">
             {comments.map((c) => {
-              const isAuthor =
+              const isAuthor = !!(
                 isSignedIn &&
                 user?.id &&
                 c.userId &&
-                String(user.id) === String(c.userId);
+                String(user.id) === String(c.userId)
+              );
 
+              // DEBUG LOGGING:
               console.log("Logged-in user ID:", user?.id);
               console.log("Comment user ID:", c.userId);
 
