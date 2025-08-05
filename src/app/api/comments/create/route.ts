@@ -16,8 +16,8 @@ export async function POST(req: Request) {
 
   try {
     // 2. Get authenticated Clerk user ID
-    const { userId } = await auth();
-    if (!userId) {
+    const { userId: clerkUserId } = await auth(); // renamed to clarify
+    if (!clerkUserId) {
       return NextResponse.json({ message: "Not authenticated" }, { status: 403 });
     }
 
@@ -26,13 +26,13 @@ export async function POST(req: Request) {
     const { content, postId } = body;
 
     // 4. Optional double-check: block user spoofing
-    if (body.userId && body.userId !== userId) {
+    if (body.userId && body.userId !== clerkUserId) {
       return NextResponse.json({ message: "You're not allowed to impersonate another user." }, { status: 403 });
     }
 
     // 5. Look up the user from our DB (by Clerk ID)
-    const user = await User.findOne({ clerkId: userId }).lean();
-    if (!user || !user._id) {
+    const dbUser = await User.findOne({ clerkId: clerkUserId }).lean();
+    if (!dbUser || !dbUser._id) {
       return NextResponse.json({ message: "User not found." }, { status: 404 });
     }
 
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     const newComment = await Comment.create({
       content,
       postId,
-      userId: user._id, // Use internal ObjectId, not Clerk ID
+      userId: dbUser._id, // Use internal ObjectId, not Clerk ID
     });
 
     // 7. Normalize and return the full comment structure
@@ -48,12 +48,13 @@ export async function POST(req: Request) {
       _id: newComment._id.toString(),
       postId: newComment.postId,
       content: newComment.content,
-      userId: newComment.userId.toString(),
+      userId: newComment.userId.toString(),      // Internal MongoDB user ID
+      clerkUserId,                               // <-- Add this field for frontend checks
       numberOfLikes: newComment.numberOfLikes ?? 0,
       likes: [],
       createdAt: newComment.createdAt,
-      authorUsername: user.username,
-      authorImageUrl: user.profilePicture || "/default-avatar.png",
+      authorUsername: dbUser.username,
+      authorImageUrl: dbUser.profilePicture || "/default-avatar.png",
     };
 
     return NextResponse.json(formattedComment, { status: 200 });
