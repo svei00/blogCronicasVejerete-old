@@ -25,7 +25,12 @@ export async function createComment(
   const res = await fetch(`/api/comments/create`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ postId, content }),
+    body: JSON.stringify({
+      postId,
+      content,
+      // If you are using Clerk on the frontend, make sure to pass the clerkUserId from there
+      // Otherwise, it should be extracted from the backend session
+    }),
   });
   if (!res.ok) {
     throw new Error(`Failed to create comment (status ${res.status})`);
