@@ -40,7 +40,8 @@ export async function POST(req: Request) {
     const newComment = await Comment.create({
       content,
       postId,
-      userId: dbUser._id, // Use internal ObjectId, not Clerk ID
+      userId: dbUser._id,     // Use internal ObjectId, not Clerk ID
+      clerkUserId,            // <-- Save Clerk user ID into MongoDB
     });
 
     // 7. Normalize and return the full comment structure

@@ -1,5 +1,3 @@
-// /src/lib/actions/comments.ts
-
 import { ICommentWithUser } from "@/app/components/CommentSection"; //<-- Import correct type
 
 /**
@@ -20,7 +18,8 @@ export async function fetchPostComments(postId: string): Promise<ICommentWithUse
  */
 export async function createComment(
   postId: string,
-  content: string
+  content: string,
+  clerkUserId?: string // <-- Optional: allows sending Clerk user ID from frontend
 ): Promise<ICommentWithUser> {
   const res = await fetch(`/api/comments/create`, {
     method: "POST",
@@ -28,6 +27,7 @@ export async function createComment(
     body: JSON.stringify({
       postId,
       content,
+      clerkUserId, // <-- Pass to API so it can be stored in MongoDB
       // If you are using Clerk on the frontend, make sure to pass the clerkUserId from there
       // Otherwise, it should be extracted from the backend session
     }),
