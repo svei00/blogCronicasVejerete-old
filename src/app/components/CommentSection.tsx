@@ -179,8 +179,8 @@ export default function CommentSection({ postId }: CommentSectionProps) {
               const isAuthor = !!(
                 isSignedIn &&
                 user?.id &&
-                c.userId &&
-                String(user.id) === String(c.userId)
+                c.clerkUserId &&
+                user.id === c.clerkUserId
               );
 
               // DEBUG LOGGING:
