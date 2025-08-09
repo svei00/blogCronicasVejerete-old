@@ -27,7 +27,7 @@ export async function createComment(
     body: JSON.stringify({
       postId,
       content,
-      clerkUserId, // <-- Pass to API so it can be stored in MongoDB
+      clerkUserId, // <-- Always send to backend if available so both IDs get stored
       // If you are using Clerk on the frontend, make sure to pass the clerkUserId from there
       // Otherwise, it should be extracted from the backend session
     }),
