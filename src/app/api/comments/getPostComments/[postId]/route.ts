@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
       _id: Types.ObjectId;
       postId: string;
       content: string;
+      clerkUserId?: string; // <-- added to include Clerk ID
       userId: {
         _id: Types.ObjectId;
         username?: string;
@@ -49,6 +50,7 @@ export async function GET(request: NextRequest) {
       postId: c.postId,
       content: c.content,
       userId: c.userId._id.toString(), // convert ObjectId to string
+      clerkUserId: c.clerkUserId || null, // <-- now returning Clerk ID
       numberOfLikes: Array.isArray(c.likes) ? c.likes.length : 0,
       likes: (c.likes || []).map((id) => id.toString()),
       createdAt: c.createdAt,
