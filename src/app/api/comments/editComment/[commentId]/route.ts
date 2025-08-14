@@ -14,8 +14,8 @@ export async function PUT(request: NextRequest) {
   await connect();
 
   // 2. Authenticate user via Clerk
-  const { userId, sessionClaims } = await auth();
-  if (!userId) {
+  const { userId: clerkUserId, sessionClaims } = await auth(); // <-- renamed for clarity
+  if (!clerkUserId) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
@@ -33,9 +33,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ message: "Comment not found" }, { status: 404 });
     }
 
-    // 6. Authorization: allow if user is owner or has isAdmin flag
+    // 6. Authorization: allow if Clerk ID matches or user is admin
     const isAdmin = (sessionClaims?.publicMetadata as { isAdmin?: boolean })?.isAdmin;
-    if (comment.userId.toString() !== userId && !isAdmin) {
+    if (comment.clerkUserId !== clerkUserId && !isAdmin) { // <-- FIXED: compare Clerk IDs
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
@@ -55,6 +55,7 @@ export async function PUT(request: NextRequest) {
       postId: comment.postId,
       content: comment.content,
       userId: comment.userId.toString(),
+      clerkUserId: comment.clerkUserId || null, // <-- include Clerk ID for consistency
       numberOfLikes: comment.likes?.length ?? 0,
       likes: comment.likes ?? [],
       createdAt: comment.createdAt,
