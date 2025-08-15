@@ -24,6 +24,7 @@ export async function DELETE(request: NextRequest) {
     // 3. Extract the commentId from the URL path
     const segments = request.nextUrl.pathname.split("/");
     const commentId = segments[segments.length - 1];
+    console.log("Deleting commentId:", commentId); // <--- degugging log
 
     // 4. Retrieve the comment from the database
     const comment = await Comment.findById(commentId);
