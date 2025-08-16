@@ -32,18 +32,16 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ message: "Comment not found" }, { status: 404 });
     }
 
-    // 5. Authorization check (compare ObjectId to string)
-    const isAdmin = (sessionClaims?.publicMetadata as { isAdmin?: boolean })?.isAdmin;
+   // 5. Authorization check using Clerk ID
+  const isAdmin = (sessionClaims?.publicMetadata as { isAdmin?: boolean })?.isAdmin;
 
-    // <--- DEBUG: log IDs to confirm
-    console.log("Clerk userId:", userId);
-    console.log("Comment userId (Mongo):", comment.userId.toString());
-    console.log("Comment clerkUserId:", comment.clerkUserId);
+  // <--- DEBUG: log IDs to confirm
+  console.log("Clerk userId:", userId);
+  console.log("Comment clerkUserId:", comment.clerkUserId);
 
-    if (comment.userId.toString() !== userId && !isAdmin) {
-      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-    }
-
+    if (comment.clerkUserId !== userId && !isAdmin) {
+  return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
     // 6. Delete the comment
     await Comment.findByIdAndDelete(commentId);
 
