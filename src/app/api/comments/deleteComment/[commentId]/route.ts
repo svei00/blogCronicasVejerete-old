@@ -34,6 +34,12 @@ export async function DELETE(request: NextRequest) {
 
     // 5. Authorization check (compare ObjectId to string)
     const isAdmin = (sessionClaims?.publicMetadata as { isAdmin?: boolean })?.isAdmin;
+
+    // <--- DEBUG: log IDs to confirm
+    console.log("Clerk userId:", userId);
+    console.log("Comment userId (Mongo):", comment.userId.toString());
+    console.log("Comment clerkUserId:", comment.clerkUserId);
+
     if (comment.userId.toString() !== userId && !isAdmin) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }

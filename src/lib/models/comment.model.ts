@@ -21,14 +21,14 @@ const CommentSchema = new Schema<IComment>(
   {
     content: { type: String, required: true },        // Comment content must be provided
     postId: { type: String, required: true },         // Associated post ID is required
-    userId: {                                          // Reference to the User model
-      type: mongoose.Schema.Types.ObjectId,           // <-- FIXED: use mongoose.Schema.Types.ObjectId
+    userId: {                                         // Reference to the User model
+      type: mongoose.Schema.Types.ObjectId,          // <-- Mongo ObjectId
       ref: "User",
       required: true,
     },
     clerkUserId: { type: String, required: false },   // Always saved if provided from frontend/backend
-    likes: { type: [String], default: [] },           // Initialize with empty likes array
-    numberOfLikes: { type: Number, default: 0 },      // Initialize likes count to 0
+    likes: { type: [String], default: [] },          // Initialize with empty likes array
+    numberOfLikes: { type: Number, default: 0 },     // Initialize likes count to 0
   },
   { timestamps: true } // Automatically add createdAt and updatedAt fields
 );
