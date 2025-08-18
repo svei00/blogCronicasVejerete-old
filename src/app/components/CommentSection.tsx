@@ -16,6 +16,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
+/* ---------------------------
+   ADDED: ReactQuill for inline editing
+   We load it client-side only to avoid SSR issues.
+---------------------------- */
+import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+
 interface CommentSectionProps {
   postId: string;
 }
@@ -23,6 +31,7 @@ interface CommentSectionProps {
 export interface ICommentWithUser extends IComment {
   authorUsername: string;
   authorImageUrl: string;
+  clerkUserId?: string; // <--- agregado para evitar "any"
 }
 
 export default function CommentSection({ postId }: CommentSectionProps) {
@@ -31,6 +40,14 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+
+  /* ---------------------------
+     ADDED: Inline-editing state
+     - editingId: which comment is currently being edited
+     - editDraft: current content being edited (ReactQuill value)
+  ---------------------------- */
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<string>("");
 
   const { isSignedIn, user } = useUser();
 
@@ -80,6 +97,11 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
+  /* ----------------------------------------
+     Your original edit handler stays the same.
+     We will *call* this from the new inline editor
+     "Save" button so the server remains the source-of-truth.
+  ----------------------------------------- */
   const handleEdit = async (commentId: string, content: string) => {
     try {
       const updated = await editComment(commentId, content);
@@ -108,6 +130,35 @@ export default function CommentSection({ postId }: CommentSectionProps) {
       console.error("Failed to delete comment:", err);
       setError("Could not delete comment.");
     }
+  };
+
+  /* ----------------------------------------
+     ADDED: Helpers for inline editing UX
+     - startEditing: toggles the editor on a specific comment and seeds draft
+     - cancelEditing: exits edit mode without saving
+     - saveEditing: calls your handleEdit (server update) and then exits edit mode
+  ----------------------------------------- */
+  const startEditing = (commentId: string, currentContent: string) => {
+    setEditingId(commentId);
+    setEditDraft(currentContent);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditDraft("");
+  };
+
+  const saveEditing = async () => {
+    if (!editingId) return;
+    const trimmed = editDraft.trim();
+    if (!trimmed) {
+      // Optional: guard against empty update
+      setError("Comment cannot be empty.");
+      return;
+    }
+    await handleEdit(editingId, trimmed);
+    setEditingId(null);
+    setEditDraft("");
   };
 
   return (
@@ -177,21 +228,27 @@ export default function CommentSection({ postId }: CommentSectionProps) {
           <div className="space-y-4">
             {comments.map((c) => {
               const isAuthor = !!(
-                isSignedIn &&
-                user?.id &&
-                (user.id === c.clerkUserId ||
-                  user.publicMetadata?.mongoId === c.userId)
+                (
+                  isSignedIn &&
+                  user?.id &&
+                  (user.id === c.clerkUserId || // clerk-based author
+                    user.publicMetadata?.mongoId === c.userId)
+                ) // mongo-based author
               );
 
               // DEBUG LOGGING:
               console.log("Logged-in user ID:", user?.id);
               console.log("Comment user ID:", c.userId);
 
+              const cid = c._id.toString();
+              const isEditing = editingId === cid;
+
               return (
                 <div
-                  key={c._id.toString()}
+                  key={cid}
                   className="border border-gray-600 rounded-lg p-4 space-y-2"
                 >
+                  {/* Avatar + author + time */}
                   <div className="flex items-center gap-2">
                     <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
                       <Image
@@ -214,11 +271,35 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                     </div>
                   </div>
 
-                  <p className="text-gray-200">{c.content}</p>
+                  {/* ---------------------------
+                      CONTENT or INLINE EDITOR
+                      - If this comment is being edited, show ReactQuill
+                      - Else, show normal text content
+                  ---------------------------- */}
+                  {!isEditing ? (
+                    <p className="text-gray-200">{c.content}</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {/* Inline editor using ReactQuill */}
+                      <ReactQuill
+                        theme="snow"
+                        value={editDraft}
+                        onChange={setEditDraft}
+                        placeholder="Edit your comment..."
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <Button color="gray" onClick={cancelEditing}>
+                          Cancel
+                        </Button>
+                        <Button onClick={saveEditing}>Save</Button>
+                      </div>
+                    </div>
+                  )}
 
+                  {/* Actions: like / edit / delete */}
                   <div className="flex justify-between items-center text-sm text-gray-400 mt-2">
                     <button
-                      onClick={() => handleLike(c._id.toString())}
+                      onClick={() => handleLike(cid)}
                       className="flex items-center gap-1 hover:text-blue-400"
                     >
                       <FaThumbsUp />
@@ -227,26 +308,23 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
                     {isAuthor && (
                       <div className="flex items-center gap-3">
+                        {/* ---------------------------
+                            EDIT BUTTON
+                            - When clicked, it toggles inline editor.
+                            - We seed editDraft with the current content.
+                           ---------------------------- */}
+                        {!isEditing ? (
+                          <button
+                            onClick={() => startEditing(cid, c.content)}
+                            className="text-yellow-400 hover:text-yellow-600"
+                          >
+                            <FaEdit className="inline-block mr-1" /> Edit
+                          </button>
+                        ) : null}
+
+                        {/* DELETE BUTTON (opens confirmation modal) */}
                         <button
-                          onClick={() => {
-                            const newText = prompt(
-                              "Edit your comment:",
-                              c.content
-                            );
-                            if (
-                              newText &&
-                              newText.trim() &&
-                              newText.trim() !== c.content
-                            ) {
-                              handleEdit(c._id.toString(), newText.trim());
-                            }
-                          }}
-                          className="text-yellow-400 hover:text-yellow-600"
-                        >
-                          <FaEdit className="inline-block mr-1" /> Edit
-                        </button>
-                        <button
-                          onClick={() => confirmDelete(c._id.toString())}
+                          onClick={() => confirmDelete(cid)}
                           className="text-red-400 hover:text-red-600"
                         >
                           <FaTrash className="inline-block mr-1" /> Delete
