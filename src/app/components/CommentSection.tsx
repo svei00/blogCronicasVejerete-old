@@ -26,14 +26,26 @@ export interface ICommentWithUser extends IComment {
 }
 
 export default function CommentSection({ postId }: CommentSectionProps) {
+  // State for storing all comments for this post
   const [comments, setComments] = useState<ICommentWithUser[]>([]);
+
+  // State for new comment input
   const [newContent, setNewContent] = useState("");
+
+  // Error handling state
   const [error, setError] = useState<string | null>(null);
+
+  // Modal state for delete confirmation
   const [showModal, setShowModal] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
 
+  // State for inline editing
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<string>("");
+
   const { isSignedIn, user } = useUser();
 
+  // Load comments on mount or when postId changes
   useEffect(() => {
     const loadComments = async () => {
       try {
@@ -54,13 +66,14 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   //   }
   // }, [user]);
 
+  // Submit a new comment
   const handleSubmit = async () => {
     const content = newContent.trim();
-    if (!content) return;
+    if (!content) return; // Prevent empty submission
     try {
       const created = await createComment(postId, content);
-      setComments((prev) => [created, ...prev]);
-      setNewContent("");
+      setComments((prev) => [created, ...prev]); // Add new comment on top
+      setNewContent(""); // Clear input
       setError(null);
     } catch (err) {
       console.error("Failed to create comment:", err);
@@ -68,6 +81,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
+  // Like a comment
   const handleLike = async (commentId: string) => {
     try {
       const updated = await likeComment(commentId);
@@ -80,6 +94,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
+  // Edit a comment (server update)
   const handleEdit = async (commentId: string, content: string) => {
     try {
       const updated = await editComment(commentId, content);
@@ -92,11 +107,13 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
+  // Open delete confirmation modal
   const confirmDelete = (commentId: string) => {
     setShowModal(true);
     setCommentToDelete(commentId);
   };
 
+  // Delete a comment
   const handleDelete = async () => {
     if (!commentToDelete) return;
     try {
@@ -110,8 +127,34 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
+  // Start inline editing a comment
+  const startEditing = (commentId: string, currentContent: string) => {
+    setEditingId(commentId);
+    setEditDraft(currentContent);
+  };
+
+  // Cancel inline editing
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditDraft("");
+  };
+
+  // Save inline editing changes
+  const saveEditing = async () => {
+    if (!editingId) return;
+    const trimmed = editDraft.trim();
+    if (!trimmed) {
+      setError("Comment cannot be empty.");
+      return;
+    }
+    await handleEdit(editingId, trimmed);
+    setEditingId(null);
+    setEditDraft("");
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6 border border-gray-700 rounded-lg">
+      {/* Display signed-in user info */}
       {isSignedIn ? (
         <div className="flex items-center gap-2 text-sm text-gray-300">
           <p>Signed in as:</p>
@@ -141,6 +184,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         </div>
       )}
 
+      {/* New comment input */}
       {isSignedIn && (
         <div className="space-y-2">
           <Textarea
@@ -187,11 +231,15 @@ export default function CommentSection({ postId }: CommentSectionProps) {
               console.log("Logged-in user ID:", user?.id);
               console.log("Comment user ID:", c.userId);
 
+              const cid = c._id.toString();
+              const isEditing = editingId === cid;
+
               return (
                 <div
-                  key={c._id.toString()}
+                  key={cid}
                   className="border border-gray-600 rounded-lg p-4 space-y-2"
                 >
+                  {/* Avatar + author + time */}
                   <div className="flex items-center gap-2">
                     <div className="relative h-6 w-6 rounded-full overflow-hidden border border-gray-500">
                       <Image
@@ -214,11 +262,30 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                     </div>
                   </div>
 
-                  <p className="text-gray-200">{c.content}</p>
+                  {/* Inline editing using Textarea */}
+                  {!isEditing ? (
+                    <p className="text-gray-200">{c.content}</p>
+                  ) : (
+                    <div className="space-y-2">
+                      <Textarea
+                        rows={3}
+                        maxLength={1000}
+                        value={editDraft}
+                        onChange={(e) => setEditDraft(e.target.value)}
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <Button color="gray" onClick={cancelEditing}>
+                          Cancel
+                        </Button>
+                        <Button onClick={saveEditing}>Save</Button>
+                      </div>
+                    </div>
+                  )}
 
+                  {/* Actions: like / edit / delete */}
                   <div className="flex justify-between items-center text-sm text-gray-400 mt-2">
                     <button
-                      onClick={() => handleLike(c._id.toString())}
+                      onClick={() => handleLike(cid)}
                       className="flex items-center gap-1 hover:text-blue-400"
                     >
                       <FaThumbsUp />
@@ -227,26 +294,16 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
                     {isAuthor && (
                       <div className="flex items-center gap-3">
+                        {!isEditing && (
+                          <button
+                            onClick={() => startEditing(cid, c.content)}
+                            className="text-yellow-400 hover:text-yellow-600"
+                          >
+                            <FaEdit className="inline-block mr-1" /> Edit
+                          </button>
+                        )}
                         <button
-                          onClick={() => {
-                            const newText = prompt(
-                              "Edit your comment:",
-                              c.content
-                            );
-                            if (
-                              newText &&
-                              newText.trim() &&
-                              newText.trim() !== c.content
-                            ) {
-                              handleEdit(c._id.toString(), newText.trim());
-                            }
-                          }}
-                          className="text-yellow-400 hover:text-yellow-600"
-                        >
-                          <FaEdit className="inline-block mr-1" /> Edit
-                        </button>
-                        <button
-                          onClick={() => confirmDelete(c._id.toString())}
+                          onClick={() => confirmDelete(cid)}
                           className="text-red-400 hover:text-red-600"
                         >
                           <FaTrash className="inline-block mr-1" /> Delete
@@ -261,6 +318,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         )}
       </div>
 
+      {/* Delete confirmation modal */}
       <Modal
         show={showModal}
         onClose={() => setShowModal(false)}
