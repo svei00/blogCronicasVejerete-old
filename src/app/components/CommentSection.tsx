@@ -297,14 +297,14 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                         {!isEditing && (
                           <button
                             onClick={() => startEditing(cid, c.content)}
-                            className="text-yellow-400 hover:text-yellow-600"
+                            className="text-green-400 hover:text-blue-500"
                           >
                             <FaEdit className="inline-block mr-1" /> Edit
                           </button>
                         )}
                         <button
                           onClick={() => confirmDelete(cid)}
-                          className="text-green-400 hover:text-blue-500"
+                          className="text-red-600 hover:text-orange-400"
                         >
                           <FaTrash className="inline-block mr-1" /> Delete
                         </button>
