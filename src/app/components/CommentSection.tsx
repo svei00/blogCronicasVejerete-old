@@ -304,7 +304,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                         )}
                         <button
                           onClick={() => confirmDelete(cid)}
-                          className="text-red-400 hover:text-red-600"
+                          className="text-green-400 hover:text-blue-500"
                         >
                           <FaTrash className="inline-block mr-1" /> Delete
                         </button>
