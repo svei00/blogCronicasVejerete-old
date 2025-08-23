@@ -238,7 +238,7 @@ export default function CreatePostPage() {
 
           {/* Submit button to publish the post */}
           <Button type="submit" gradientDuoTone="purpleToPink">
-            Publish
+            Publish!!
           </Button>
         </form>
       </div>
