@@ -297,7 +297,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                         {!isEditing && (
                           <button
                             onClick={() => startEditing(cid, c.content)}
-                            className="text-green-400 hover:text-blue-500"
+                            className="text-green-400 hover:text-lime-500"
                           >
                             <FaEdit className="inline-block mr-1" /> Edit
                           </button>
