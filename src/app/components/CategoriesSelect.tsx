@@ -17,6 +17,7 @@ const CategoriesSelect: React.FC<CategoriesSelectProps> = ({
       <option value="alucines">Alucines</option>
       <option value="pensamientos">Pensamientos</option>
       <option value="borradores">Borradores</option>
+      <option value="test">Test</option>
     </Select>
   );
 };

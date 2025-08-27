@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { TextInput, Select, FileInput, Button, Alert } from "flowbite-react";
+import { TextInput, FileInput, Button, Alert } from "flowbite-react";
 import "react-quill-new/dist/quill.snow.css";
 import {
   getStorage,
@@ -16,6 +16,7 @@ import { useState, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { app } from "@/firebase";
+import CategoriesSelect from "/components/CategoriesSelect";
 
 // Dynamically import ReactQuill (client-side only)
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
@@ -165,17 +166,12 @@ export default function CreatePostPage() {
                 setFormData({ ...formData, title: e.target.value })
               }
             />
-            <Select
+            <CategoriesSelect
+              value={formData.category || "uncategorized"}
               onChange={(e) =>
                 setFormData({ ...formData, category: e.target.value })
               }
-            >
-              <option value="uncategorized">Select a Category</option>
-              <option value="alucines">Alucines</option>
-              <option value="pensamientos">Pensamientos</option>
-              <option value="announcements">Announcements</option>
-              <option value="draft">Draft</option>
-            </Select>
+            />
           </div>
 
           {/* File input and image upload button */}
