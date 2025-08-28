@@ -16,7 +16,7 @@ import { useState, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { app } from "@/firebase";
-import CategoriesSelect from "/components/CategoriesSelect";
+import CategoriesSelect from "../../components/CategoriesSelect";
 
 // Dynamically import ReactQuill (client-side only)
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
