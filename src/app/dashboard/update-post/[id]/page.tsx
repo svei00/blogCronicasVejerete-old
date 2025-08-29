@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { Alert, Button, FileInput, Select, TextInput } from "flowbite-react";
+import { Alert, Button, FileInput, TextInput } from "flowbite-react";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -16,6 +16,7 @@ import {
 } from "firebase/storage";
 import { app } from "../../../../firebase";
 import Image from "next/image";
+import CategoriesSelect from "../../../components/CategoriesSelect";
 
 // Dynamically import ReactQuill so it loads only on the client side.
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
@@ -175,7 +176,7 @@ const UpdatePost: React.FC = () => {
                 setFormData((prev) => ({ ...prev, title: e.target.value }))
               }
             />
-            <Select
+            {/* <Select
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, category: e.target.value }))
               }
@@ -186,7 +187,14 @@ const UpdatePost: React.FC = () => {
               <option value="pensamientos">Pensamientos</option>
               <option value="announcements">Announcements</option>
               <option value="draft">Draft</option>
-            </Select>
+            </Select> */}
+
+            <CategoriesSelect
+              value={formData.category || "uncategorized"}
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
+              }
+            />
           </div>
           {/* File input and upload button */}
           <div className="flex gap-4 items-center justify-between border-4 border-teal-500 border-dotted p-3">
